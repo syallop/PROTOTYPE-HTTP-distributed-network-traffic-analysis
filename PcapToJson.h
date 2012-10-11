@@ -93,6 +93,12 @@ struct tcp_hdr {
     u_short tcp_urp;
 };
 
-
+//UDP header
+struct udp_hdr {
+    u_short udp_sport; //source port
+    u_short udp_dport; //destination port
+    u_short udp_ulen;  //length
+    u_short udp_sum;   //checksum
+};
 
 int compileAndSetFilter(pcap_t* handle, char filter[], int optimise, bpf_u_int32 netmask);
