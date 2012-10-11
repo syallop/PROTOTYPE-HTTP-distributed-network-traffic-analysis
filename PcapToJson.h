@@ -70,6 +70,22 @@ struct ip_hdr {
     struct in_addr src, dst;//Source and destination address
 };
 
+
+//ARP header
+struct arp_hdr {
+    u_int16_t htype; //Hardware type
+    u_int16_t ptype; //protocol type
+    u_char    hlen;  //Hardware address length
+    u_char    plen;  //Protocol address length
+    u_int16_t op;    //Operation code
+    #define ARP_REQUEST 1
+    #define ARP_REPLY 2
+    u_char sha[6];   //Sender hardware address
+    u_char spa[4];   //Sender IP address
+    u_char tha[6];   //Target hardware address
+    u_char tpa[4];   //Target IP address
+};
+
 //TCP header
 struct tcp_hdr {
     u_short tcp_sport;
