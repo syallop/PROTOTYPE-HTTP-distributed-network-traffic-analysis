@@ -68,14 +68,36 @@ struct ip_hdr {
     u_int16_t   len;          //Total length
     u_int16_t   id;           //Identification
     u_int16_t   off;          //Fragment offset
-    #define IP_DF 0x4000         //DF 'dont fragment' flag
-    #define IP_MF 0x2000         //MF 'more fragment' flag
-    #define IP_OFFMASK 0x1fff    //Mask for fragmenting bits
+    #define IP_DF 0x4000      //DF 'dont fragment' flag
+    #define IP_MF 0x2000      //MF 'more fragment' flag
+    #define IP_OFFMASK 0x1fff //Mask for fragmenting bits
     u_int8_t    ttl;          //Time to live
-    u_int8_t    protocol;            //Protocol
+    u_int8_t    protocol;     //Protocol
     u_int16_t   sum;          //Checksum
-    struct in_addr src, dst;//Source and destination address
+    struct in_addr src, dst;  //Source and destination address
 };
+
+
+
+struct inv6_addr {
+    unsigned char bytes[16]; //*< 128 bit IP6 address
+};
+
+
+struct ipv6_hdr {
+    union {
+        struct hdrctl {
+            unsigned int   un1_flow; //Version, class, flow
+            unsigned short un1_plen; //Payload length
+            unsigned char  un1_nxt;  //Next header
+            unsigned char  un1_hlim; //Hop limit
+        } un1;
+        unsigned char un2_vfc; //4 bits version, 4 bits class
+    } ctlun;
+    struct inv6_addr src, dst; //Source and destination address
+};
+
+
 
 
 //ARP header
@@ -95,56 +117,34 @@ struct arp_hdr {
 
 //TCP header
 struct tcp_hdr {
-    u_short tcp_sport;
-    u_short tcp_dport;
-    u_int   tcp_seq;
-    u_int   tcp_ack;
-    u_char  tcp_offx2;
-    #define TCP_OFF(tcp)    (((tcp)->tcp_offx2 & 0xf0) >> 4)
-    u_char  tcp_flags;
-    #define TCP_FIN 0x01
-    #define TCP_SYN 0x02
-    #define TCP_RST 0x04
-    #define TCP_PUSH 0x08
-    #define TCP_ACK 0x10
-    #define TCP_URG 0x20
-    #define TCP_ECE 0x40
-    #define TCP_CWR 0x80
+    u_short sport;  //Source port
+    u_short dport;  //Destination port
+    u_int   seq;    //Sequence number
+    u_int   ack;    //Acknowledge number
+    u_char  offx2;  //Data offset
+    #define OFF(tcp)    (((tcp)->offx2 & 0xf0) >> 4)
+    u_char  flags;
+    #define TCP_FIN  0x01 //No more data from sender
+    #define TCP_SYN  0x02 //Synchronise sequence number
+    #define TCP_RST  0x04 //Reset the connection
+    #define TCP_PUSH 0x08 //Push function
+    #define TCP_ACK  0x10 //Acknowledge field significant
+    #define TCP_URG  0x20 //Urgent pointer field significant
+    #define TCP_ECE  0x40 //ECN echo
+    #define TCP_CWR  0x80 //Congestion window reduced
     #define TCP_FLAGS    (TCP_FIN|TCP_SYN|TCP_RST|TCP_ACK|TCP_URG|TCP_ECE|TCP_CWR)
-    u_short tcp_win;
-    u_short tcp_sum;
-    u_short tcp_urp;
+    u_short win;  //Window size
+    u_short sum;  //Checksum
+    u_short urp;  //Urgent pointer
 };
 
 //UDP header
 struct udp_hdr {
-    u_short udp_sport; //source port
-    u_short udp_dport; //destination port
-    u_short udp_ulen;  //length
-    u_short udp_sum;   //checksum
+    u_short sport; //source port
+    u_short dport; //destination port
+    u_short ulen;  //length
+    u_short sum;   //checksum
 };
-
-
-/*
-struct dns_hdr {
-  WORD Xid;
-  BYTE RecursionDesired  :1;
-  BYTE Truncation  :1;
-  BYTE Authoritative  :1;
-  BYTE Opcode  :4;
-  BYTE IsResponse  :1;
-  BYTE ResponseCode  :4;
-  BYTE CheckingDisabled   :1;
-  BYTE AuthenticatedData   :1;
-  BYTE Reserved  :1;
-  BYTE RecursionAvailable  :1;
-  WORD QuestionCount;
-  WORD AnswerCount;
-  WORD NameServerCount;
-  WORD AdditionalCount;
-};
-*/
-
 
 struct dns_hdr {
         unsigned id:16; //Transaction ID
