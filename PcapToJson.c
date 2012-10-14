@@ -145,7 +145,10 @@ void getJsonIP(const u_char* ipPacket, //An entire IP packet
     return;
 }
 
-void getJsonIPv6(const u_char* ipv6Packet, json_object* jsonIPv6) {
+/* Given an IPv6 packet, construct a Json representation in jsonIPv6 */
+void getJsonIPv6(const u_char* ipv6Packet, //An entire IPv6 packet
+                 json_object* jsonIPv6) {  //Result
+
     //Get pointer to the upv6 packet and its header
     const struct ipv6_hdr* ipv6Header = (struct ipv6_hdr* ) ipv6Packet;
     const u_char* ipv6Payload = (ipv6Packet + sizeof(struct ipv6_hdr));
@@ -194,8 +197,14 @@ void getJsonIPv6(const u_char* ipv6Packet, json_object* jsonIPv6) {
 
 
 }
-void getJsonARP(const u_char* arpPacket, json_object* jsonARP) {
+
+/* Given an ARP packet, construct a json representation in jsonARP */
+void getJsonARP(const u_char* arpPacket, //An entire ARP packet
+                json_object* jsonARP) {  //Result
+
+    //Get a pointer to the ARP packets header and its payload.
     const struct arp_hdr* arpHeader = (struct arp_hdr* ) arpPacket;
+    //TODO payload pointer
 
     char tmpip[16];
     char tmpmac[17];
@@ -239,17 +248,39 @@ void getJsonARP(const u_char* arpPacket, json_object* jsonARP) {
                 arpHeader->tha[5]);
     add_to_object_new_string(jsonARP, "target mac", tmpmac);
 
+    return;
 }
 
-void getJsonTCP(const u_char* tcpPacket, json_object* jsonTCP) {
+/* Given a TCP packet, construct a Json representation in jsonTCP */
+void getJsonTCP(const u_char* tcpPacket, //An entire TCP packet
+                json_object* jsonTCP) {  //Result
+
+    //Get a pointer to the TCP packets header and its payload.
     const struct tcp_hdr* tcpHeader = (struct tcp_hdr* ) tcpPacket;
+    const u_char* tcpPayload = (tcpPacket + sizeof(struct tcp_hdr));
 
     add_to_object_new_string(jsonTCP, "type",    "TCP");
     add_to_object_new_int(jsonTCP,    "srcPort", ntohs(tcpHeader->sport));
     add_to_object_new_int(jsonTCP,    "dstPort", ntohs(tcpHeader->dport));
 
+    //Attempt to parse the application layer packet by looking at the source and
+    //destination port numbers
+    json_object* jsonApplication = json_object_new_object();
+    if(!getJsonTCPPort(ntohs(tcpHeader->dport), tcpPayload, jsonApplication)) {
+        if(!getJsonUDPPort(ntohs(tcpHeader->sport), tcpPayload, jsonApplication)) {
+            add_to_object_new_string(jsonApplication, "type", "UNKNOWN");
+        }
+    }
+    json_object_object_add(jsonTCP, "application", jsonApplication);
+
+    return;
 }
-void getJsonUDP(const u_char* udpPacket, json_object* jsonUDP) {
+
+/* Given a UDP packet, construct a Json representation in jsonUDP */
+void getJsonUDP(const u_char* udpPacket, //An entire UDP packet
+                json_object* jsonUDP) {  //Result
+
+    //Get a pointer to the UDP packets header and its payload.
     const struct udp_hdr* udpHeader = (struct udp_hdr* ) udpPacket;
     const u_char* udpPayload = (udpPacket + sizeof(struct udp_hdr));
 
@@ -258,24 +289,63 @@ void getJsonUDP(const u_char* udpPacket, json_object* jsonUDP) {
     add_to_object_new_int(jsonUDP, "dstPort", ntohs(udpHeader->dport));
     add_to_object_new_int(jsonUDP, "length", ntohs(udpHeader->ulen));
 
-    /*Below case statements will be inefficient/ buggy*/
+    //Attempt to parse the application layer packet by looking at the source and
+    //destination port numbers
     json_object *jsonApplication = json_object_new_object();
-    switch(ntohs(udpHeader->dport)) {
-        case 53:
-            getJsonDNS(udpPayload, jsonApplication);
-            break;
-    }
-    switch(ntohs(udpHeader->sport)) {
-        case 53:
-            getJsonDNS(udpPayload, jsonApplication);
-            break;
+    if(!getJsonUDPPort(ntohs(udpHeader->dport), udpPayload, jsonApplication)) {
+        if(!getJsonUDPPort(ntohs(udpHeader->sport), udpPayload, jsonApplication)) {
+            add_to_object_new_string(jsonApplication, "type", "UNKNOWN");
+        }
     }
     json_object_object_add(jsonUDP, "application", jsonApplication);
+
+    return;
+}
+
+/* Given a UDP port number and a corresponding packet, attempt to identify its contents
+ * and store a Json representation in jsonApplication
+ * Returns 0 when no matches found, otherwise 1.*/
+int getJsonUDPPort(int port,                         //Port number packet corresponds to
+                    const u_char* applicationPacket, //An unidentified packet
+                    json_object* jsonApplication) {  //Result
+
+    switch(port) {
+        case 53:   getJsonDNS(applicationPacket, jsonApplication);              return 1;
+        case 123:  add_to_object_new_string(jsonApplication, "type", "NTP");    return 1;
+        case 220:  add_to_object_new_string(jsonApplication, "type", "IMAP");   return 1;
+        case 5353: add_to_object_new_string(jsonApplication, "type", "MDNS");   return 1;
+        default: return 0;
+    }
+}
+
+/* Given a TCP port number and a corresponding packet, attempt to identify its contents
+ * and store a Json representation in jsonApplication
+ * Returns 0 when no matches found, otherwise 1.*/
+int getJsonTCPPort(int port,                         //Port number packet corresponds to
+                    const u_char* applicationPacket, //An unidentified packet
+                    json_object* jsonApplication) {  //Result
+
+    switch(port) {
+        case 20: add_to_object_new_string(jsonApplication, "type", "FTP");      return 1;
+        case 22: add_to_object_new_string(jsonApplication, "type", "SSH");      return 1;
+        case 23: add_to_object_new_string(jsonApplication, "type", "Telnet");   return 1;
+        case 25: add_to_object_new_string(jsonApplication, "type", "SMTP");     return 1;
+        case 53: getJsonDNS(applicationPacket, jsonApplication);                return 1;
+        case 80: add_to_object_new_string(jsonApplication, "type", "HTTP");     return 1;
+        case 143: add_to_object_new_string(jsonApplication, "type", "IMAP");    return 1;
+        case 443: add_to_object_new_string(jsonApplication, "type", "HTTPS");   return 1;
+        default: return 0;
+    }
 }
 
 
-void getJsonDNS(const u_char* dnsPacket, json_object* jsonDNS) {
+/* Given a DNS packet, construct a Json representation in jsonDNS */
+void getJsonDNS(const u_char* dnsPacket, //An entire DNS packet
+                json_object* jsonDNS) {  //Result
+
+    //Get a pointer to the DNS packets header and its payload
     const struct dns_hdr* dnsHeader = (struct dns_hdr* ) dnsPacket;
+    //TODO pointer to payload
 
     add_to_object_new_string(  jsonDNS, "type",        "DNS"                 );
     add_to_object_new_int(     jsonDNS, "id",          ntohs(dnsHeader->id) );
@@ -291,6 +361,8 @@ void getJsonDNS(const u_char* dnsPacket, json_object* jsonDNS) {
     add_to_object_new_int(jsonDNS, "answers",   ntohs(dnsHeader->ancount));
     add_to_object_new_int(jsonDNS, "authrecords", ntohs(dnsHeader->nscount));
     add_to_object_new_int(jsonDNS, "additional-records", ntohs(dnsHeader->arcount));
+
+    return;
 }
 
 //Print to stdout a Json representation of a packet

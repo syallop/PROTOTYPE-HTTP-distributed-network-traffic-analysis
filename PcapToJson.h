@@ -43,9 +43,12 @@ void getJsonUDP(const u_char* udp, json_object* jsonUDP);
 //===================================//
 
 
-//=========Application layer==============================//
+//=========Application layer================================================================//
+int getJsonUDPPort(int port, const u_char* applicationLayer, json_object* jsonApplication);
+int getJsonTCPPort(int port, const u_char* applicationLayer, json_object* jsonApplication);
 void getJsonDNS(const u_char* dns, json_object* jsonDNS);
-//========================================================//
+
+//==========================================================================================//
 
 
 
