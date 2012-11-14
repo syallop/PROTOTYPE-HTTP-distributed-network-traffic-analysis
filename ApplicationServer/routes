@@ -1,0 +1,7 @@
+/                     RootR               GET
+/client               ClientR             Static getClient
+/captures/            CapturesR           GET DELETE
+/captures/#Int        CaptureR            GET DELETE
+/captures/new/#String NewCaptureR         POST
+/testpackets/         TestPackets         GET
+
