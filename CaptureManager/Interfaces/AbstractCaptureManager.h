@@ -9,7 +9,7 @@
 
 class AbstractCaptureManager {
     public:
-        virtual std::string getCaptures() = 0;i       //Ask for a description of the capturers it's managing
+        virtual std::string getCaptures() = 0;        //Ask for a description of the capturers it's managing
         virtual std::string getCapture(int capId) = 0;//Ask for the parsed packets produced by a capture
 
         virtual int newCapture() = 0;//Ask for a new capturer to be created and managed. Return the Id it's been given.

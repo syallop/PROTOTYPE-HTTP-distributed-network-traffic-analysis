@@ -5,11 +5,13 @@
 #include "./Interfaces/AbstractCapturer.h"
 
 #include "./Capturers/StaticCapturer.h"
-//#include "./Captures/LiveCapturer.h"
+#include "./Capturers/LiveCapturer.h"
 //etc
 
 #include <string>
 #include <map>
+
+
 using std::string;
 using std::map;
 
