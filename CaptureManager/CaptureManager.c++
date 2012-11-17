@@ -35,7 +35,7 @@ void CaptureManager::tick() {
     cout << "LOG: CaptureManager: ticking managed captures" << endl;
     //Tick all managed captures, asking them to update themselves potentially processing more packets
     for(capturesIterator it = captures.begin(); it != captures.end(); it++) {
-        it->second->tick(1);
+        it->second->tick(10);
     }
 }
 
@@ -70,10 +70,17 @@ string CaptureManager::getCapture(int capId) {
 }
 
 //Create a new capture and return the ID we gave it
-int CaptureManager::newCapture() {
-    cout << "LOG: CaptureManager: Adding new capturer" << endl;
-    //captures[++lastId] = new StaticCapturer("packets.pcap","",0);
-    captures[++lastId] = new LiveCapturer("",0);
+int CaptureManager::newCapture(string type) {
+    cout << "LOG: CaptureManager: Asked to add capturer of type: " << type << endl;
+
+    if(type == "static"){
+        captures[++lastId] = new StaticCapturer("packets.pcap","",0);
+    } else if(type == "live"){
+        captures[++lastId] = new LiveCapturer("",0);
+    } else {
+        cout << "LOG: CaptureManager: type not recognised." << endl;
+        return 0;
+    }
     return lastId;
 }
 

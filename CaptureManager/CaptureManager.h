@@ -25,7 +25,7 @@ class CaptureManager : public AbstractCaptureManager {
         string getCaptures();
         string getCapture(int capId);
 
-        int newCapture();
+        int newCapture(string type);
 
         void endCaptures();
         void endCapture(int capId);
