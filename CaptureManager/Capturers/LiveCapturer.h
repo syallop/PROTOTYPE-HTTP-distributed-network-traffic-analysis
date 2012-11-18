@@ -33,7 +33,7 @@ class LiveCapturer : public AbstractCapturer {
         bpf_u_int32 netmask = 0xFFFFFF00;
         char* filter = "";             //BPF format filter to apply to the capture
 
-	void tickThread(int maxPackets);
+        void tickThread(int maxPackets);
 };
 
 #endif

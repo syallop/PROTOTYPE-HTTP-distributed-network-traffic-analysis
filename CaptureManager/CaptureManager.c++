@@ -24,7 +24,7 @@ using boost::thread;
 CaptureManager::CaptureManager() {
     cout << "LOG: CaptureManager: constructed" << endl;
     capturerTypes["static"] = "A capture parsed from an existing pcap file";
-    capturerTypes["live"] = "A capture made in real time over the wlan0 interface";
+    capturerTypes["live"] = "A capture made in real time over a network interface";
 }
 
 //Destroy the captureManager
