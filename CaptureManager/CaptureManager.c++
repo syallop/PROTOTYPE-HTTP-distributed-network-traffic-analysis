@@ -23,6 +23,8 @@ using boost::thread;
 //Construct the captureManager with default arguments
 CaptureManager::CaptureManager() {
     cout << "LOG: CaptureManager: constructed" << endl;
+    capturerTypes["static"] = "A capture parsed from an existing pcap file";
+    capturerTypes["live"] = "A capture made in real time over the wlan0 interface";
 }
 
 //Destroy the captureManager
@@ -70,19 +72,60 @@ string CaptureManager::getCapture(int capId) {
 }
 
 //Create a new capture and return the ID we gave it
-int CaptureManager::newCapture(string type) {
+//0 returned to indicate error
+int CaptureManager::newCapture(string type, vector<string> params) {
     cout << "LOG: CaptureManager: Asked to add capturer of type: " << type << endl;
 
     if(type == "static"){
-        captures[++lastId] = new StaticCapturer("packets.pcap","",0);
+
+        if(params.size() < 3){
+            cout << "LOG: CaptureManager: filename, filter and optimisation should be passed to a static capturer" << endl;
+            return 0;
+        } else {
+            string filename = params[0];
+            string filter   = params[1];
+            int    optimise = atoi(params[2].c_str());
+            cout << "LOG: filename " << filename << " filter " << filter << " optimise " << optimise << endl;
+            captures[++lastId] = new StaticCapturer(filename, filter, optimise);
+        }
+
     } else if(type == "live"){
-        captures[++lastId] = new LiveCapturer("",0);
+
+        if(params.size() < 3){
+            cout << "LOG: CaptureManager: interface and optimisation should be passed to a live capturer" << endl;
+            return 0;
+        } else {
+            string device   = params[0];
+            string filter   = params[1];
+            int    optimise = atoi(params[2].c_str());
+
+            captures[++lastId] = new LiveCapturer(device, filter, optimise);
+        }
     } else {
+
         cout << "LOG: CaptureManager: type not recognised." << endl;
         return 0;
+
     }
+
+
     return lastId;
 }
+
+//Construct and return a string representing the capturer types that this manager supports
+string CaptureManager::getCapturerTypes(){
+    cout << "LOG: CaptureManager: Asked to describe supported capturer types" << endl;
+
+    stringstream out;
+    out << "[";
+    for(capturerTypeIterator it = capturerTypes.begin(); it != capturerTypes.end(); it++) {
+        out << "    { \"Type\": \"" << it->first << "\", \"Description\": \"" << it->second << "\"},";
+    }
+    out << "]";
+
+    return out.str();
+}
+
 
 //Ask all capturers we're managing to end and clear our map
 void CaptureManager::endCaptures() {

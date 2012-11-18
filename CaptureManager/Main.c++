@@ -8,6 +8,7 @@
 #include "Main.h"
 using namespace std;
 using boost::thread;
+#include <boost/tokenizer.hpp>
 
 //Program entry point
 int main(int argc, char *argv[]) {
@@ -121,53 +122,89 @@ void Program::handleConnection(int lsockfd) {
     close(lsockfd);
 }
 
+//Given a string, return a vector of tokenizing it delimited on the space character
+vector<string> getSpaceDelimTokens(string s){
+    istringstream iss(s);
+    vector<string> tokens;
+
+    copy(istream_iterator<string>(iss),
+         istream_iterator<string>(),
+         back_inserter<vector<string> >(tokens));
+
+    return tokens;
+}
 
 //Given a command string, return an appropriate response, most likely from querying the capture manager
 //Warning: horrible code.
-string Program::commandParser(char command[64]) {
-    char *c;
-    char *p;
+string Program::commandParser(char input[64]) {
+    string sinput = input;//Work with cpp strings instead of char arrays
+    vector<string> tokens;//Tokens parsed from input string
+    string command;
 
-    //Split command string into command and optional parameter
-    c = strtok(command, " ");
-    if(c){
-        p = strtok(NULL, " ");
+    //Tokenize the input string. The first word is the command. The rest are parameters
+    tokens = getSpaceDelimTokens(input);
+    if(tokens.empty()){
+        return "LOG: No command parsed";
+    } else {
+        command = tokens.at(0);
     }
 
-    if (matches(c, "getcaptures")){
+    /*Try and match the command string*/
+    if (command == "getcapturertypes"){
+
+        cout << "LOG parsed as request for a list of supported capturer types" << endl;
+        return manager->getCapturerTypes();
+
+    } else if (command == "getcaptures"){
+
         cout << "LOG: parsed as request for a list of captures" << endl;
         return manager->getCaptures();
-    }else if (matches(command, "getcapture")){
-        cout << "LOG: parsed as a request for the contents of a capture" << endl;
-        if(p){
-            return manager->getCapture(atoi(p));
-        } else{
-            return "Provide an ID to retrieve.";
-        }
-    }else if (matches(command, "newcapture")){
-        cout << "LOG: parsed as request for a new capture to be created" << endl;
-        if(p){
-            string type = p;
 
-            char tmp[10];
-            sprintf(tmp, "%d", manager->newCapture(type));
-            return tmp;
-        } else {
-            return "Provide a caoture type";
+    }else if (command == "getcapture"){
+
+        cout << "LOG: parsed as a request for the contents of a capture" << endl;
+        if(tokens.size() >= 2){
+            int capId = atoi(tokens[1].c_str());
+            return manager->getCapture(capId);
+        } else{
+            return "Provide an ID to retrieve as the first parameter.";
         }
-    }else if (matches(command, "endcaptures")){
+
+    }else if (command == "newcapture"){
+
+        cout << "LOG: parsed as request for a new capture to be created" << endl;
+
+        if(tokens.size() >= 2){
+            string type = tokens[1];
+            tokens.erase(tokens.begin(), tokens.begin()+2);
+            vector<string> additionalParams = tokens;
+
+            char response[10];
+            sprintf(response, "%d", manager->newCapture(type, additionalParams));
+            return response;
+        } else {
+            return "Provide a capture type as the first parameter";
+        }
+
+    }else if (command == "endcaptures"){
+
         cout << "LOG: parsed as a request to end all captures" << endl;
         manager->endCaptures();
         return "success";
-    }else if (matches(command, "endcapture")){
+
+    }else if (command == "endcapture"){
+
         cout << "LOG: parsed as a request to end a given capture" << endl;
-        if(p){
-            manager->endCapture(atoi(p));
+
+        if(tokens.size() >= 2){
+            int capId = atoi(tokens[1].c_str());
+            manager->endCapture(capId);
             return "success";
         } else{
-            return "Provide an ID to end.";
+            return "Provide an ID to end as the first parameter.";
         }
-    }else if(matches(command, "exit")){
+
+    }else if(command == "exit"){
         cout << "LOG: parsed as a request to end comunication" << endl;
         return "Bye";
     }else {
@@ -175,6 +212,8 @@ string Program::commandParser(char command[64]) {
         return "CommandNotFound";
     }
 }
+
+
 
 //True when the first char array contains the second
 bool Program::matches(char first[], char second[]) {

@@ -17,7 +17,7 @@ void livePcapCallback(u_char* jsonArray,
 
 class LiveCapturer : public AbstractCapturer {
     public:
-        LiveCapturer(string filter, int optimise);
+        LiveCapturer(string device, string filter, int optimise);
         ~LiveCapturer();
         void tick(int maxPackets);
         string getParsedPackets();
