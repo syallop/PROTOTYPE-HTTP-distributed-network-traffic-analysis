@@ -76,17 +76,21 @@ void pcapCallback(u_char* jsonArray, const struct pcap_pkthdr* pcapHeader, const
 //Construct and return a string representing in json the packets parsed so far.
 //Remove all returned packets from the queue
 string StaticCapturer::getParsedPackets() {
-    string output = "";
+    string output = "[";
     cout << "LOG: capturer received request for packets" << endl;
 
-    //If we have no new packets, return an empty JSON array
-    if(jsonQueue.empty()) {
-        output = "[]";
-    } else {
+    //If the queue isn't empty, construct a list of lists of packets.
+    //I.e. [ [{1,..},{2,..}], [{3,..},{4,..}]]
+    if(!jsonQueue.empty()){
+        output += jsonQueue.front();
+        jsonQueue.pop();
+
         while(!jsonQueue.empty()){
+            output += ", ";
             output += jsonQueue.front();
             jsonQueue.pop();
         }
     }
+    output += "]";
     return output;
 }
