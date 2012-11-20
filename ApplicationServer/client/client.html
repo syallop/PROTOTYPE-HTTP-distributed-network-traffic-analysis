@@ -1,37 +1,40 @@
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
-        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js"></script>
+
+        <script src="./jquery-ui-1.9.1.custom/js/jquery-1.8.2.js"></script>
+        <script src="./jquery-ui-1.9.1.custom/js/jquery-ui-1.9.1.custom.min.js"></script>
+
         <script type="text/javascript" src="./js/parseJsonPcap.js"></script>
-        <script type="text/javascript" src="./js/exampleAPI.js"></script>
-        <style>
-            body {
-                overflow-y:scroll;
-            }
-            #chart {
-                width: 500px;
-                margin-left: 20px;
-            }
-        </style>
-        <script type="text/javascript">
-            $(document).ready(function() {
-                $.getJSON('./test/packets.json', function (d) {
-                                              var s = showJsonPackets(d);
-                                              $('#packets').append(s);
-                                             });
-            });
-        </script>
+        <script type="text/javascript" src="./js/API.js"></script>
+        <script type="text/javascript" src="./js/clientFunctions.js"></script>
+        <script type="text/javascript" src="./js/myButtons.js"></script>
+
+        <link rel="stylesheet" href="./jquery-ui-1.9.1.custom/css/smoothness/jquery-ui-1.9.1.custom.min.css" />
+        <link rel="stylesheet" href="./css/style.css">
+
     </head>
     <body>
-        <div id="apiExample">
-            <a onclick='getCaptures()'>GET /captures/</a>
-            <a onclick="getCapture( $('#idinput').val() )"> GET /captures/id</a><input id="idinput" type="text"></input>
-            <a onclick="createCapture(0)">POST /captures/</a>
-            <a onclick="endCaptures()">DELETE /captures/</a>
-            <a onclick="endCapture( $('#idinput').val() )"> DELETE /captures/id</a>
-            <div id="response"></div>
-        </div>
+        <div id="wrap">
+            <div id="options">
+                <h3>Options</h3>
+                <!--<button id="btEndAll" onclick="endAllCaptures()">End all captures</button>-->
+            </div>
 
-        <div id="packets"></div>
+            <div id="display">
+                <h2>Page title</h2>
+                <span id="toolbar" class="ui-widget-header ui-corner-all">
+                    <button id="btNew" onclick="newCapture()">new</button>
+                    <button id="btEnd" onclick="endCurrrentCapture()">end</button>
+                    <button id="btStartStop" onclick="toggleStartStop()">start</button>
+                    <button id="btMore" onclick="getMorePackets()">more</button>
+                </span>
+
+                <div id="packets"></div>
+
+                <div id="graph"></div>
+
+            </div>
+        </div>
     </body>
 </html>

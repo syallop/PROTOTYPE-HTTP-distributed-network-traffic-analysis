@@ -6,6 +6,18 @@ function showUnrecognisedByClient() {
     return 'Unrecognised by client';
 }
 
+function showEmptyLayer() {
+    return 'NONE';
+}
+
+//Return a string representing a list of list of packets.
+//I.e. Input: [ [{1,..},{2,..},{3,..}],[{4,..}], [] ]
+function showJsonPacketsList(packetsList){
+    var output;
+    $.each(packetsList, function(i,packets){output+='<br>'+showJsonPackets(packets);});
+    return output;
+}
+
 //Return a string representing a complete set of packets
 function showJsonPackets(packets) {
     var output;
@@ -18,14 +30,19 @@ function showJsonPacket(packet) {
     var output =  'PCAP. Number: '+packet.number
                  +' Size: '+packet.size
                  +' Seconds: '+packet.seconds+'.'+packet.useconds
-                 +'</br>'
-                 + showJsonDatalink(packet.datalink);
+                 +'</br>';
+
+    if(!(typeof packet.datalink === "undefined")){
+        output += showJsonDatalink(packet.datalink);
+    }
+
     return output;
 }
 
 //Return a string representing a datalink level packet
 function showJsonDatalink(datalink) {
     var output = 'Datalink. ';
+
     switch (datalink.type) {
         case    'ethernet': output+=showJsonEthernet(datalink); break;
         case    'UNKNOWN' : output+=showUnrecognisedByServer;   break;
