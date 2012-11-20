@@ -30,12 +30,12 @@ makeRequests requests = do
     where
         makeRequests' :: Handle -> [String] -> [String] -> IO [String]
         makeRequests' h (r:rs) acc = do
-            writeLog $ "Making request '" ++ show r ++ "'"
+            writeLog $ "Making request '" ++ r ++ "'"
             hPutStrLn h r
             hFlush h
 
             response <- hGetLine h
-            writeLog $ "Received response '" ++ show response ++ "'"
+            writeLog $ "Received response '" ++ response ++ "'"
             makeRequests' h rs (acc++[response])
         makeRequests' _ [] acc = return acc
 
