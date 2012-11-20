@@ -1,3 +1,5 @@
+/*Defines ajax functions for communication with the server*/
+
 //Ask API to return all available captures
 function ajaxGetCaptures(callback) {
     var r;
