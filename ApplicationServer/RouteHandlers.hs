@@ -5,14 +5,15 @@
 
 module RouteHandlers where
 {-
- - This file defines the route handlers used by the server to perform
- - actions and return content when a request is received
+ - This file defines the route handlers. A handler is responsible for constructing a response to a client.
+ - The 'routes' file maps URL's to the handlers defined in this file.
  -}
 
 import Yesod   hiding (Route(..))
 import Foundation
 import CapManCommunication (makeRequest, makeRequests)
 
+--Function for debugging purposes
 writeLog :: String -> IO ()
 writeLog s = putStrLn $ "LOG: " ++ s
 
@@ -29,7 +30,7 @@ getCapturesR = do
     rep <- liftIO $ repFromRequest "getcaptures"
     sendResponse rep
 
---Stops all capturers
+--Stops all capturers. Returns success status.
 deleteCapturesR :: Handler RepHtml
 deleteCapturesR = do
     liftIO $ writeLog "deleteCaptures handler called"
@@ -57,6 +58,7 @@ deleteCaptureR id = do
     rep <- liftIO $ repFromRequest $ "endcapture " ++ show id
     sendResponse rep
 
+--Returns the capture types the capture component understands
 getSupportedTypesR :: Handler RepHtml
 getSupportedTypesR = do
     liftIO $ writeLog "getSupportedTypes handler called"

@@ -7,7 +7,7 @@
 {-
  - This file defines the entry point to the server application
  -}
-import Yesod
+import Yesod          --The webserver framework we'll use
 import Yesod.Static
 
 import Foundation     --Import the underlying site datastructures

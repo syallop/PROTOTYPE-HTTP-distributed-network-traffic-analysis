@@ -12,6 +12,7 @@ module CapManCommunication where
 import Network
 import System.IO
 
+--Function for debug purposes
 writeLog :: String -> IO ()
 writeLog s = putStrLn $ "LOG: " ++ s
 
