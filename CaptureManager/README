@@ -1,0 +1,142 @@
+This directory contains files defining a prototype CaptureManager implementation.
+
+README CONTENTS:
+--------------------------------------------------------------
+- FILES & DIRECTORY STRUCTURE
+- DEPENDENCIES
+- COMPILATION PROCESS
+- RUNNING
+- COMMANDS
+- USEAGE
+-------------------------------------------------------------
+
+FILE & DIRECTORY STRUCTURE:
+--------------------------------------------------------------
+/Interfaces/ - Contains interfaces components should implement
+            AbstractCaptureManager.h - Describes the interface CaptureManagers should implement
+            AbstractCapturer.h - Describes the interface Capturers should implement
+/Capturers/ - Contains implementations of AbstractCapturer
+           StaticCapturer.c++ - A capturer that reads pcap data from a file.
+           LiveCapturer.c++ - A capturer that reads pcap data from a live device capture
+/PcapConversion/ - Contains code for parsing PCAP into a JSON representation
+
+/
+ CaptureManager.* - An implementation of AbstractCaptureManager. Allows management of Live/Static capturers
+ Main.* - The program entry point. Defines a command parser that listens on port 9999 or the specified port, passing commands to the CaptureManager and responses back to the user
+-------------------------------------------------------------      
+
+
+
+DEPENDENCIES:
+--------------------------------------------------------------
+    g++
+    libpcap
+    json-c - https://github.com/json-c/json-c/wiki
+    boost
+--------------------------------------------------------------
+
+
+
+
+
+
+COMPILATION PROCESS:
+--------------------------------------------------------------
+- Clean up
+make clean
+
+- Compile
+make   
+-------------------------------------------------------------
+
+
+
+
+
+
+RUNNING:
+------------------------------------------------------------
+- Run on default port (9999)
+./CaptureManager
+
+- Run on other port 
+./CaptureManager -p PORTNUMBER
+
+Note: Listening on network devices will most likely require administrator priviledges. I.e. on linux:
+sudo ./CaptureManager 
+-----------------------------------------------------------
+
+
+
+COMMANDS:
+-----------------------------------------------------------
+- Return a description of the captures the system is maintaining
+getcaptures                                                 
+
+- Return JSON encoding of packets processed since last call
+getcapture CAPTUREID 
+
+- Attempt to end all managed captures. Returns "success"/ "failure"                                 
+endcaptures                                     
+
+- Attempt to end the specified capture. Returns "success"/ "failure"            
+endcapture CAPTUREID        
+
+- Attempt to create a new capture with the specified parameters. Return the ID or 0 if failed.
+newcapture [(static FILENAME)/ (live DEVICENAME)] filter 0  
+
+------------------------------------------------------------
+
+
+USAGE
+------------------------------------------------------------
+The program will listen for a standard IP connection. I.e. it is possible to use with the standard 'telnet' command.
+
+To test with telnet:
+- Ensure dependencies are installed
+- Run program
+
+- From the same machine run 'telnet localhost PORTNUMBER'
+- Type a command, hit enter to receive a response line
+- Type 'exit' command to end communication
+- NOTE: program will continue to listen for connections and can handle multiple simultaneous connections
+
+
+Below is an example commmunication:
+
+getcaptures 
+[]
+
+newcapture static packets.pcap none 0
+1
+
+getcaptures
+[   { "Id": 1, "type":"UNKNOWN"}]
+
+getcapture 1
+[[ { "number": 1, "size": 92, "seconds": 1349546572, "useconds": 384824, "datalink": { "type": "ethernet", "macSrc": "4c:17:eb:56:31:8c", "dst": "00:18:39:0d:3b:ee", "network": { "type": "IP", "ipSrc": "192.168.0.1", "ipDst": "192.168.0.42", "total length": 78, "header length": 5, "transport": { "type": "UDP", "srcPort": 52713, "dstPort": 137, "length": 58, "application": { "type": "UNKNOWN" } } } } }
+]]
+
+endcapture 1
+success
+
+getcaptures
+[]
+
+newcapture live wlan0 none 0
+2
+
+getcaptures
+[   { "Id": 2, "type":"UNKNOWN"}]
+
+endcaptures
+success
+
+getcaptures
+[]
+
+exit
+------------------------------------------------------------
+
+
+
