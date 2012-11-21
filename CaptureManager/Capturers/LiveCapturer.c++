@@ -17,18 +17,28 @@ using namespace std;
 using boost::thread;
 
 //Construct a static capturer using default parameters if not supplied
-LiveCapturer::LiveCapturer(string device="eth0",
-                           string ifilter="",
-                           int optimise=0) {
+LiveCapturer::LiveCapturer(string idevice    = "eth0",
+                           string ifilter   = "",
+                           int    ioptimise = 0       ) {
 
-    filter = ifilter.c_str();
+    device   = idevice;
+    filter   = ifilter.c_str();
+    optimise = ioptimise;
 
+    cout << "LOG: live capturer constructed" << endl;
+}
+
+//Attempt to start the capture: open handles to the data source etc.
+//Return success.
+//This method must be called once and succeed before asking the capturer to tick itself.
+bool LiveCapturer::start(){
     pcap_lookupnet(device.c_str(), &ipaddr, &netmask, errbuf);
 
     //Open a handle to the capture device
     handle = pcap_open_live(device.c_str(), PCAP_ERRBUF_SIZE, 0, -1, errbuf);
     if(handle == NULL) {
         fprintf(stderr, "Could not open device for capture: %s\n", errbuf);
+        //return false;
     }
 
     //Attempt to compile and apply a bpf format filter to the capture
@@ -38,7 +48,8 @@ LiveCapturer::LiveCapturer(string device="eth0",
         fprintf(stderr, " Setting filter failed: %s\n", pcap_geterr(handle));
     }
 
-    cout << "LOG: static capturer constructed" << endl;
+    cout << "LOG: live capturer started" << endl;
+    return true;
 }
 
 //Destroy the packet capturer

@@ -16,16 +16,27 @@ using std::string;
 using namespace std;
 
 //Construct a static capturer using default parameters if not supplied
-StaticCapturer::StaticCapturer(string ifileName="packets.pcap",
-                               string ifilter="",
-                               int optimise=0) {
-    fileName = ifileName;
-    filter = ifilter.c_str();
+StaticCapturer::StaticCapturer(string ifileName = "packets.pcap",
+                               string ifilter   = "",
+                               int    ioptimise = 0               ) {
 
+    fileName = ifileName;
+    filter   = ifilter.c_str();
+    optimise = ioptimise;
+
+    cout << "LOG: static capturer constructed" << endl;
+}
+
+//Attempt to start the capture: open handles to the data source etc.
+//Return success.
+//This method must be called once and succeed before asking the capturer to tick itself.
+bool StaticCapturer::start(){
+	
     //Open a handle to the pcap format file
     handle = pcap_open_offline(fileName.c_str(), errbuf);
     if(handle == NULL) {
         fprintf(stderr, "Could not open file for capture: %s\n", errbuf);
+        //return false;
     }
 
     //Attempt to compile and apply a bpf format filter to the capture
@@ -35,7 +46,8 @@ StaticCapturer::StaticCapturer(string ifileName="packets.pcap",
         fprintf(stderr, " Setting filter failed: %s\n", pcap_geterr(handle));
     }
 
-    cout << "LOG: static capturer constructed" << endl;
+    cout << "LOG: static capturer started" << endl;
+    return true;
 }
 
 //Destroy the packet capturer
