@@ -1,0 +1,12 @@
+This directory contains two subdirectories of prototype components.
+
+/CaptureManager - Contains files defining a prototype CaptureManager implementation, a program allowing the 
+                  creation and manipulation of PCAP sources.
+
+/ApplicationServer - Contains files defining a HTTP API to a underlying CaptureManager to allow control from within a webbrowser
+test.sh - a bash script for testing purposes. Provided the two components have been built successfully, will run them both together.
+
+
+Each component has its own README containing information on their dependencies, how to build them and their useage.
+
+
