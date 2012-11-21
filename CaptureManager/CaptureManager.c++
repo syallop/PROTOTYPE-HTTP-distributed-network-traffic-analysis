@@ -71,6 +71,7 @@ string CaptureManager::getCapture(int capId) {
     }
 }
 
+
 //Create a new capture and return the ID we gave it
 //0 returned to indicate error
 int CaptureManager::newCapture(string type, vector<string> params) {
@@ -107,8 +108,8 @@ int CaptureManager::newCapture(string type, vector<string> params) {
             int    optimise = atoi(params[2].c_str());
             cout << "LOG: devicename=" << device << " filter=" << filter << " optimise=" << optimise << endl;
 
-            AbstractCapturer *c = new LiveCapturer(device, filter, optimise); 
-            if(c->start()){            
+            AbstractCapturer *c = new LiveCapturer(device, filter, optimise);
+            if(c->start()){
                 captures[++lastId] = c;
             } else {
                 return 0;
