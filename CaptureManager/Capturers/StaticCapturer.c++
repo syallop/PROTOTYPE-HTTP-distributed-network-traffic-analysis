@@ -26,19 +26,16 @@ StaticCapturer::StaticCapturer(string ifileName="packets.pcap",
     handle = pcap_open_offline(fileName.c_str(), errbuf);
     if(handle == NULL) {
         fprintf(stderr, "Could not open file for capture: %s\n", errbuf);
-        return;
     }
 
     //Attempt to compile and apply a bpf format filter to the capture
     if(pcap_compile(handle, &program, filter, optimise, netmask) == -1) {
         fprintf(stderr, " Filter compilation failed: %s\n", pcap_geterr(handle));
-    }
-    if(pcap_setfilter(handle, &program) == -1) {
+    } else if(pcap_setfilter(handle, &program) == -1) {
         fprintf(stderr, " Setting filter failed: %s\n", pcap_geterr(handle));
     }
 
     cout << "LOG: static capturer constructed" << endl;
-    alive = true;
 }
 
 //Destroy the packet capturer

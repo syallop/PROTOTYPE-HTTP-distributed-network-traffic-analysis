@@ -21,8 +21,6 @@ class LiveCapturer : public AbstractCapturer {
         ~LiveCapturer();
         void tick(int maxPackets);
         string getParsedPackets();
-
-        bool alive = false;
     private:
         queue<string> jsonQueue;       //Storage for processed packets
 
