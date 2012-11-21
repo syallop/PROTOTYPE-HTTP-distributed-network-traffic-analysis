@@ -1,0 +1,110 @@
+This directory contains files defining a prototype HTTP API to an underlying CaptureManager.
+
+README CONTENTS:
+--------------------------------------------------------------
+- FILES & DIRECTORY STRUCTURE
+- DEPENDENCIES
+- COMPILATION PROCESS
+- RUNNING
+- API
+- USEAGE
+-------------------------------------------------------------
+
+FILE & DIRECTORY STRUCTURE:
+--------------------------------------------------------------
+/client/ - Contains a prototype client for communication with this server. Files in this directory are accessible via http://SERVERURL/client/PATHTOFILE
+/
+ Main.hs - The program entry point. Listens on port 3000 for http connections which it handles.
+ routes - a compile-time configuration file. Defines a map of URLS to their handlers
+ RouteHandlers.hs - Defines the handlers refered to in the 'routes' file. 
+
+ Foundation.hs - Defines the underlying datastructures the server depends upon.
+ CapManCommunication.hs - Functions for communication with a CaptureManager (currently assumed to be running on port 9000 of the same machine)
+
+
+-------------------------------------------------------------      
+
+
+
+DEPENDENCIES:
+--------------------------------------------------------------
+    ghc  
+
+Haskell packages:
+    Yesod
+    Network
+    System.IO
+--------------------------------------------------------------
+
+
+
+
+
+
+COMPILATION PROCESS:
+--------------------------------------------------------------
+ghc Main
+-------------------------------------------------------------
+
+
+
+
+
+
+RUNNING:
+------------------------------------------------------------
+./Main
+
+Note: will listen on 'all' available interfaces on port 3000
+-----------------------------------------------------------
+
+
+
+API:
+-----------------------------------------------------------
+
+- Return a JSON description of the captures the system is maintaining
+GET /captures/                                                 
+
+- Return JSON encoding of packets processed since last call
+GET /captures/CAPTUREID 
+
+- Attempt to end all managed captures. Returns "success"/ "failure"                                 
+DELETE /captures/                                     
+
+- Attempt to end the specified capture. Returns "success"/ "failure"            
+DELETE /captures/CAPTUREID        
+
+- Attempt to create a new capture with the specified parameters. Return the ID or 0 if failed.
+POST /captures/new/#PARAMS
+
+where params is a string of format: [(static FILENAME)/ (live DEVICENAME)] FILTER OPTIMISE
+where: FILENAME: is the path to a pcap source file
+       DEVICENAME: is a device name, I.e. 'eth0', 'wlan0'
+       FILTER: is a bpf format filter. NOTE: the parser performs stupid tokenisation on spaces, so this can't contain any.
+              This makes this feature fairly non-functional. If any invalid string is passed, such as 'NONE' the program 
+              will continue without compiling the filter.
+       OPTIMISE: should be either 0 or 1 to specify whether the provided filter should be optimised or not
+------------------------------------------------------------
+
+
+USAGE
+------------------------------------------------------------
+The program will listen for connections on 'all' available interfaces on port 3000. The program can be used by anything that
+understands how to make and receive HTTP requests, I.E a webbrowser.
+
+To test:
+- Run a CaptureManager on port 9999
+- Run this server
+- Point a webbrowser at the example client at http://URL/client/client.html
+
+Alternativly, for the purpose of testing, it is possible to use the standard 'telnet' command to manually write the HTTP requests.
+- From the same machine run 'telnet URL 3000'
+
+- Issue HTTP requests to the resources defined in API. I.e:
+    GET /captures/ HTTP/1.1
+
+------------------------------------------------------------
+
+
+
