@@ -83,8 +83,14 @@ endcaptures
 endcapture CAPTUREID        
 
 - Attempt to create a new capture with the specified parameters. Return the ID or 0 if failed.
-newcapture [(static FILENAME)/ (live DEVICENAME)] filter 0  
+newcapture [(static FILENAME)/ (live DEVICENAME)] FILTER OPTIMISE
 
+where: FILENAME: is the path to a pcap source file
+       DEVICENAME: is a device name, I.e. 'eth0', 'wlan0'
+       FILTER: is a bpf format filter. NOTE: the parser performs stupid tokenisation on spaces, so this can't contain any.
+              This makes this feature fairly non-functional. If any invalid string is passed, such as 'NONE' the program 
+              will continue without compiling the filter.
+       OPTIMISE: should be either 0 or 1 to specify whether the provided filter should be optimised or not
 ------------------------------------------------------------
 
 
