@@ -1,10 +1,6 @@
 /**
  *  Defines a CaptureManager class, an implementation of AbstractCaptureManager
  *  which allows for management of multiple capturers.
- *
- *  Limitations/ incomplete code:
- *  - Only creates StaticCapturers with their default parameters
- *  - Always ticks capturers to process no more than one packet at once
  */
 #include "CaptureManager.h"
 
