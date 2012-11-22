@@ -146,7 +146,53 @@ void getJsonIP(const u_char* ipPacket, //An entire IP packet
 }
 
 void getJsonIPv6(const u_char* ipv6Packet, json_object* jsonIPv6) {
+    //Get pointer to the upv6 packet and its header
+    const struct ipv6_hdr* ipv6Header = (struct ipv6_hdr* ) ipv6Packet;
+    const u_char* ipv6Payload = (ipv6Packet + sizeof(struct ipv6_hdr));
+
+    char tmpStr[40];
+
+    //Add source and destination IPv6 address
     add_to_object_new_string(jsonIPv6, "type","IPv6");
+
+    sprintf(tmpStr, "%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x",
+            (int)ipv6Header->src.bytes[0], (int)ipv6Header->src.bytes[1],
+            (int)ipv6Header->src.bytes[2], (int)ipv6Header->src.bytes[3],
+            (int)ipv6Header->src.bytes[4], (int)ipv6Header->src.bytes[5],
+            (int)ipv6Header->src.bytes[6], (int)ipv6Header->src.bytes[7],
+            (int)ipv6Header->src.bytes[8], (int)ipv6Header->src.bytes[9],
+            (int)ipv6Header->src.bytes[10], (int)ipv6Header->src.bytes[11],
+            (int)ipv6Header->src.bytes[12], (int)ipv6Header->src.bytes[13],
+            (int)ipv6Header->src.bytes[14], (int)ipv6Header->src.bytes[15]);
+    add_to_object_new_string(jsonIPv6, "ipSrc", tmpStr);
+
+    sprintf(tmpStr, "%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x",
+            (int)ipv6Header->dst.bytes[0], (int)ipv6Header->dst.bytes[1],
+            (int)ipv6Header->dst.bytes[2], (int)ipv6Header->dst.bytes[3],
+            (int)ipv6Header->dst.bytes[4], (int)ipv6Header->dst.bytes[5],
+            (int)ipv6Header->dst.bytes[6], (int)ipv6Header->dst.bytes[7],
+            (int)ipv6Header->dst.bytes[8], (int)ipv6Header->dst.bytes[9],
+            (int)ipv6Header->dst.bytes[10], (int)ipv6Header->dst.bytes[11],
+            (int)ipv6Header->dst.bytes[12], (int)ipv6Header->dst.bytes[13],
+            (int)ipv6Header->dst.bytes[14], (int)ipv6Header->dst.bytes[15]);
+    add_to_object_new_string(jsonIPv6, "ipDst", tmpStr);
+
+    //Add the lower transport layer.
+    json_object *jsonTransport = json_object_new_object();
+    switch (ipv6Header->ctlun.un1.un1_nxt) {
+        case 0x06:
+            getJsonTCP(ipv6Payload, jsonTransport);
+            break;
+        case 0x11:
+            getJsonUDP(ipv6Payload, jsonTransport);
+            break;
+        default:
+            add_to_object_new_string(jsonTransport,"type","UNKNOWN");
+            break;
+    }
+    json_object_object_add(jsonIPv6, "transport", jsonTransport);
+
+
 }
 void getJsonARP(const u_char* arpPacket, json_object* jsonARP) {
     const struct arp_hdr* arpHeader = (struct arp_hdr* ) arpPacket;
@@ -199,8 +245,8 @@ void getJsonTCP(const u_char* tcpPacket, json_object* jsonTCP) {
     const struct tcp_hdr* tcpHeader = (struct tcp_hdr* ) tcpPacket;
 
     add_to_object_new_string(jsonTCP, "type",    "TCP");
-    add_to_object_new_int(jsonTCP,    "srcPort", ntohs(tcpHeader->tcp_sport));
-    add_to_object_new_int(jsonTCP,    "dstPort", ntohs(tcpHeader->tcp_dport));
+    add_to_object_new_int(jsonTCP,    "srcPort", ntohs(tcpHeader->sport));
+    add_to_object_new_int(jsonTCP,    "dstPort", ntohs(tcpHeader->dport));
 
 }
 void getJsonUDP(const u_char* udpPacket, json_object* jsonUDP) {
@@ -208,18 +254,18 @@ void getJsonUDP(const u_char* udpPacket, json_object* jsonUDP) {
     const u_char* udpPayload = (udpPacket + sizeof(struct udp_hdr));
 
     add_to_object_new_string(jsonUDP,"type","UDP");
-    add_to_object_new_int(jsonUDP, "srcPort", ntohs(udpHeader->udp_sport));
-    add_to_object_new_int(jsonUDP, "dstPort", ntohs(udpHeader->udp_dport));
-    add_to_object_new_int(jsonUDP, "length", ntohs(udpHeader->udp_ulen));
+    add_to_object_new_int(jsonUDP, "srcPort", ntohs(udpHeader->sport));
+    add_to_object_new_int(jsonUDP, "dstPort", ntohs(udpHeader->dport));
+    add_to_object_new_int(jsonUDP, "length", ntohs(udpHeader->ulen));
 
     /*Below case statements will be inefficient/ buggy*/
     json_object *jsonApplication = json_object_new_object();
-    switch(ntohs(udpHeader->udp_dport)) {
+    switch(ntohs(udpHeader->dport)) {
         case 53:
             getJsonDNS(udpPayload, jsonApplication);
             break;
     }
-    switch(ntohs(udpHeader->udp_sport)) {
+    switch(ntohs(udpHeader->sport)) {
         case 53:
             getJsonDNS(udpPayload, jsonApplication);
             break;
@@ -232,7 +278,7 @@ void getJsonDNS(const u_char* dnsPacket, json_object* jsonDNS) {
     const struct dns_hdr* dnsHeader = (struct dns_hdr* ) dnsPacket;
 
     add_to_object_new_string(  jsonDNS, "type",        "DNS"                 );
-    add_to_object_new_int(     jsonDNS, "id",          ntohs(dnsHeader->qid) );
+    add_to_object_new_int(     jsonDNS, "id",          ntohs(dnsHeader->id) );
     add_to_object_new_boolean( jsonDNS, "response",    dnsHeader->qr         );
     add_to_object_new_int(     jsonDNS, "opcode",      dnsHeader->opcode     );
     add_to_object_new_boolean( jsonDNS, "authorative", dnsHeader->aa         );
