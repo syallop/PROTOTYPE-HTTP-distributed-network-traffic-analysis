@@ -11,6 +11,7 @@
 
 class AbstractCapturer {
     public:
+        virtual bool start() = 0; //Ask a capturer to begin working. Return success of this attempt
         virtual void tick(int maxPackets) = 0;     //Ask a capturer to update its internal state
         virtual std::string getParsedPackets() = 0;//Ask a capturer to return parsed packets
 };

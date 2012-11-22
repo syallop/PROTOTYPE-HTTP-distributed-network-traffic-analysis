@@ -18,6 +18,7 @@ void livePcapCallback(u_char* jsonArray,
 class LiveCapturer : public AbstractCapturer {
     public:
         LiveCapturer(string device, string filter, int optimise);
+        bool start();
         ~LiveCapturer();
         void tick(int maxPackets);
         string getParsedPackets();
@@ -31,7 +32,10 @@ class LiveCapturer : public AbstractCapturer {
         char* dev;                     //Device we're listening on. I.e. 'wlan0','eth0'
         char errbuf[PCAP_ERRBUF_SIZE]; //Buffer for PCAP errors
         bpf_u_int32 netmask = 0xFFFFFF00;
+
+        string device;                 //Device to perform capture on. I.E "wlan0"
         char* filter = "";             //BPF format filter to apply to the capture
+        int optimise;                  //Whether to optimise filter compilation. 
 
         void tickThread(int maxPackets);
 };

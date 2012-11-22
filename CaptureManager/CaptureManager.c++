@@ -85,8 +85,15 @@ int CaptureManager::newCapture(string type, vector<string> params) {
             string filename = params[0];
             string filter   = params[1];
             int    optimise = atoi(params[2].c_str());
-            cout << "LOG: filename " << filename << " filter " << filter << " optimise " << optimise << endl;
-            captures[++lastId] = new StaticCapturer(filename, filter, optimise);
+            cout << "LOG: filename=" << filename << " filter=" << filter << " optimise=" << optimise << endl;
+
+            AbstractCapturer *c = new StaticCapturer(filename, filter, optimise);
+            if(c->start()){
+                captures[++lastId] = c;
+            } else {
+                return 0;
+            }
+
         }
 
     } else if(type == "live"){
@@ -98,8 +105,15 @@ int CaptureManager::newCapture(string type, vector<string> params) {
             string device   = params[0];
             string filter   = params[1];
             int    optimise = atoi(params[2].c_str());
+            cout << "LOG: devicename=" << device << " filter=" << filter << " optimise=" << optimise << endl;
 
-            captures[++lastId] = new LiveCapturer(device, filter, optimise);
+            AbstractCapturer *c = new LiveCapturer(device, filter, optimise); 
+            if(c->start()){            
+                captures[++lastId] = c;
+            } else {
+                return 0;
+            }
+
         }
     } else {
 

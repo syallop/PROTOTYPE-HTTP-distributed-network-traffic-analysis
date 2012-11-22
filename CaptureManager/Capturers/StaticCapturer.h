@@ -15,6 +15,7 @@ void pcapCallback(u_char* jsonArray,
 class StaticCapturer : public AbstractCapturer {
     public:
         StaticCapturer(string fileName, string filter, int optimise);
+        bool start();
         ~StaticCapturer();
         void tick(int maxPackets);
         string getParsedPackets();
@@ -27,6 +28,7 @@ class StaticCapturer : public AbstractCapturer {
         char errbuf[PCAP_ERRBUF_SIZE]; //Buffer for PCAP errors
         bpf_u_int32 netmask = 0xFFFFFF00;
         char* filter = "";             //BPF format filter to apply to the capture
+        int optimise;
 };
 
 #endif
