@@ -1,8 +1,6 @@
 #include "PcapToJson.h"
 /* Compile with: gcc PcapToJson.c -lpcap -ljson -o PcapToJson */
 
-
-
 //Attempt to apply a bpf format filter to a pcap handle
 int compileAndSetFilter(pcap_t* handle, //source of pcap data
                         char filter[],  //bpf filter string
@@ -20,207 +18,134 @@ int compileAndSetFilter(pcap_t* handle, //source of pcap data
     return 0;
 }
 
-//Given a packet and its header, construct a Json representation in 'jpacket'
-void getJsonPacketLayer(const struct pcap_pkthdr* header, const u_char* packet, //Entire packet header and contents
-                        int count,                                              //Number to label packet with
-                        json_object* jpacket) {                                 //Result
-    json_object *number, *size, *seconds, *useconds, *datalink;
+/* Given a PCAP packet and its header, construct a Json representation in jsonPacket */
+void getJsonPacket(const struct pcap_pkthdr* pcapHeader,  //PCAP packet header
+                   const u_char* pcapPayload,             //PCAP packet contents
+                   int count,                             //Number to label jsonPacket as
+                   json_object* jsonPacket) {             //Result
 
-    //Define basic key-value pairs to add
-    number   = json_object_new_int(count);
-    size     = json_object_new_int(header->len);
-    seconds  = json_object_new_int(header->ts.tv_sec);
-    useconds = json_object_new_int(header->ts.tv_usec);
+    //Add basic attributes
+    json_object_object_add(jsonPacket,"number",   json_object_new_int(count));
+    json_object_object_add(jsonPacket,"size",     json_object_new_int(pcapHeader->len));
+    json_object_object_add(jsonPacket,"seconds",  json_object_new_int(pcapHeader->ts.tv_sec));
+    json_object_object_add(jsonPacket,"useconds", json_object_new_int(pcapHeader->ts.tv_usec));
 
-    //Define datalink object to add
-    datalink = json_object_new_object();
-    getJsonDatalinkLayer(header, packet, datalink);
-
-    //Add them
-    json_object_object_add(jpacket, "number",   number);
-    json_object_object_add(jpacket, "size",     size);
-    json_object_object_add(jpacket, "seconds",  seconds );
-    json_object_object_add(jpacket, "useconds", useconds);
-    json_object_object_add(jpacket, "datalink", datalink);
-
-    return;
-}
-
-//Create a Json object representing the data link layer of a packet
-void getJsonDatalinkLayer(const struct pcap_pkthdr* header, const u_char* packet, //Entire packet header and contents
-                          json_object* datalink) {                                //To store result
-    //Assume the datalink level header is ethernet..
-    struct ether_header* ethheader = (struct ether_header* ) packet;
-    getJsonEthernet(header, packet, ethheader, datalink);
-}
-
-//Create a Json object representing the network layer of a packet
-void getJsonNetworkLayer(const struct pcap_pkthdr* header, const u_char* packet, //Entire packet header and contents
-                         const struct ether_header* ethheader,                   //Ethernet packet header only
-                         json_object* networkLayer) {                            //Result
-    json_object *type;
-    //Match against known network layer protocols and call corresponding
-    //json creation functions.
-    switch(ntohs(ethheader->ether_type)) {
-        case ETHERTYPE_IP:
-            type = json_object_new_string("IPv4");
-            json_object_object_add(networkLayer, "type", type);
-            getJsonIPv4(header, packet, networkLayer);
-            break;
-        case ETHERTYPE_IPV6:
-            type = json_object_new_string("IPv6");
-            json_object_object_add(networkLayer, "type", type);
-            break;
-        case ETHERTYPE_ARP:
-            type = json_object_new_string("ARP");
-            json_object_object_add(networkLayer, "type", type);
-            break;
-        default:
-            type = json_object_new_string("UNKNOWN");
-            json_object_object_add(networkLayer, "type", type);
-            break;
+    //TODO switch over the possible datalink layer types. Currently assumes type is ethernet.
+    //Add the datalink layer
+    json_object *jsonDatalink = json_object_new_object();
+    switch (0) {
+        case 0: getJsonEthernet(pcapPayload, jsonDatalink);
     }
+    json_object_object_add(jsonPacket, "datalink", jsonDatalink);
     return;
 }
 
-//TODO implement this correctly...
-//Create a Json object representing the transport layer of a packet
-void getJsonTransportLayer(const struct pcap_pkthdr* header, const u_char* packet,
-                           json_object* transportLayer) {
-    json_object *type, *dst, *src;
+/* Given an ethernet packet, construct a Json representation in jsonEthernet */
+void getJsonEthernet(const u_char* ethernetPacket, //An entire ethernet packet
+                     json_object* jsonEthernet) {  //Result
 
-    type = json_object_new_string("UDP");//confusing test values
-    dst  = json_object_new_string("80");
-    src  = json_object_new_string("8888");
+    char tmpstr[20];
 
-    json_object_object_add(transportLayer, "type", type);
-    json_object_object_add(transportLayer, "dst", dst);
-    json_object_object_add(transportLayer, "src", src);
+    //Get a pointer to the ethernet packets header and its payload
+    struct ether_header* ethernetHeader = (struct ether_header* ) ethernetPacket;
+    const u_char* ethernetPayload = (ethernetPacket + sizeof(struct ether_header));
 
-    //switch(transporttype)
-    //case udp:
-    //case tcp:
-    return;
-}
+    json_object *type, *macSrc, *macDst; //Attributes of jsonEthernet
 
-
-
-//Create a Json object representing an ethernet packet
-void getJsonEthernet(const struct pcap_pkthdr* header, const u_char* packet, //Entire packet header and contents
-                     const struct ether_header* ethheader,                   //Ethernet packet header only
-                     json_object* ethernet) {                                //Result
-    json_object *type, *src, *dst, *networklayer;
-    char strsrc[20];
-    char strdst[20];
-
-    //Type of packet header is ethernet by assumption that this function has been called on an
-    //ethernet packet header
     type = json_object_new_string("ethernet");
-    json_object_object_add(ethernet, "type", type);
+    json_object_object_add(jsonEthernet, "type", type);
 
     //Set the source and destination MAC addresses
-    sprintf(strsrc, "%02x:%02x:%02x:%02x:%02x:%02x",
-                     (unsigned)ethheader->ether_shost[0],
-                     (unsigned)ethheader->ether_shost[1],
-                     (unsigned)ethheader->ether_shost[2],
-                     (unsigned)ethheader->ether_shost[3],
-                     (unsigned)ethheader->ether_shost[4],
-                     (unsigned)ethheader->ether_shost[5]);
-    src = json_object_new_string(strsrc);
-    json_object_object_add(ethernet, "src", src);
+    sprintf(tmpstr, "%02x:%02x:%02x:%02x:%02x:%02x",
+                 (unsigned)ethernetHeader->ether_shost[0],
+                 (unsigned)ethernetHeader->ether_shost[1],
+                 (unsigned)ethernetHeader->ether_shost[2],
+                 (unsigned)ethernetHeader->ether_shost[3],
+                 (unsigned)ethernetHeader->ether_shost[4],
+                 (unsigned)ethernetHeader->ether_shost[5]);
+    macSrc = json_object_new_string(tmpstr);
+    json_object_object_add(jsonEthernet, "macSrc", macSrc);
 
-    sprintf(strdst, "%02x:%02x:%02x:%02x:%02x:%02x",
-                     (unsigned)ethheader->ether_dhost[0],
-                     (unsigned)ethheader->ether_dhost[1],
-                     (unsigned)ethheader->ether_dhost[2],
-                     (unsigned)ethheader->ether_dhost[3],
-                     (unsigned)ethheader->ether_dhost[4],
-                     (unsigned)ethheader->ether_dhost[5]);
-    dst  = json_object_new_string(strdst);
-    json_object_object_add(ethernet, "dst", dst);
+    sprintf(tmpstr, "%02x:%02x:%02x:%02x:%02x:%02x",
+                 (unsigned)ethernetHeader->ether_dhost[0],
+                 (unsigned)ethernetHeader->ether_dhost[1],
+                 (unsigned)ethernetHeader->ether_dhost[2],
+                 (unsigned)ethernetHeader->ether_dhost[3],
+                 (unsigned)ethernetHeader->ether_dhost[4],
+                 (unsigned)ethernetHeader->ether_dhost[5]);
+    macDst  = json_object_new_string(tmpstr);
+    json_object_object_add(jsonEthernet, "dst", macDst);
 
-
-    //Add the lower network layer
-    networklayer = json_object_new_object();
-    getJsonNetworkLayer(header, packet, ethheader, networklayer);
-    json_object_object_add(ethernet, "network", networklayer);
-
-    return;
-}
-
-//Create a Json object representing an IPv4 packet
-void getJsonIPv4(const struct pcap_pkthdr* header, const u_char* packet, //Entire packet header and contents
-                 json_object* networkLayer) {                            //Result
-    json_object *src, *dst, *protocol, *ttl;
-    const struct myip* ip;
-    u_int length;
-    int len;
-
-    //Jump past ethernet header which should have a fixed size so the sizeof is probably not necessary..
-    ip = (struct myip*)(packet + sizeof(struct ether_header));
-
-
-    //Validate ip packet------------------------------//
-    length = header->len - sizeof(struct ether_header);
-    //check if length is valid
-    if(length < sizeof(struct myip)) { return;}
-    //check for invalid header length
-    if(IP_HL(ip) < 5) { return;}
-    //check if as many bytes as claimed
-    if(length < ntohs(ip->ip_len)) { return;}
-    //End validation----------------------------------//
-
-
-    //Source and destination IP addresses
-    src = json_object_new_string(inet_ntoa(ip->ip_src));
-    dst = json_object_new_string(inet_ntoa(ip->ip_dst));
-
-    json_object_object_add(networkLayer, "src", src);
-    json_object_object_add(networkLayer, "dst", dst);
-
-    //Time to live
-    char tmp[50];
-    ttl = json_object_new_string(tmp);
-    json_object_object_add(networkLayer, "time-to-live", ttl);
-
-
-
-
-    //protocol in hex
-    //char tmp[50];
-    //sprintf(tmp,"%x",ip->ip_p);
-    //protocol = json_object_new_string(tmp);
-    //json_object_object_add(networkLayer, "protocol", protocol);
-
-    //Add transport layer
-    switch (ip->ip_p) {
-        case 0x06: getJsonTCP();break;
-        case 0x11: getJsonUDP();break;
-        default: json_object_object_add(networkLayer, "protocol", json_object_new_object());
+    //Add the lower network layer.
+    json_object *jsonNetwork = json_object_new_object();
+    switch (ntohs(ethernetHeader->ether_type)) {
+        case ETHERTYPE_IP:
+            getJsonIP(ethernetPayload, jsonNetwork);
+            break;
+        case ETHERTYPE_IPV6:
+            //getJsonIPv6(ethernetPayload, jsonNetwork);
+            break;
+        case ETHERTYPE_ARP:
+            //getJsonARP(ethernetPayload, jsonNetwork);
+            break;
     }
+    json_object_object_add(jsonEthernet, "network", jsonNetwork);
 
     return;
 }
 
-getJsonTCP() {
+/* Given an IP packet, construct a Json representation in jsonIP */
+void getJsonIP(const u_char* ipPacket, //An entire IP packet
+               json_object* jsonIP) {  //Result
 
+    //Get a pointer to the IP packets header and its payload.
+    const struct ip_hdr* ipHeader = (struct ip_hdr* ) ipPacket;
+    //const u_char* ipPayload = ipHeader;//+lengthofipheader;
+
+    //NOTE: Proceed assuming the IP packet is not malformed
+    json_object_object_add(jsonIP, "type", json_object_new_string("IP"));
+
+    //Add the source and destination IP address
+    json_object_object_add(jsonIP, "ipSrc", json_object_new_string(inet_ntoa(ipHeader->src)));
+    json_object_object_add(jsonIP, "ipDst", json_object_new_string(inet_ntoa(ipHeader->src)));
+
+    //Add the lower transport layer.
+    json_object *jsonTransport = json_object_new_object();
+    switch (ipHeader->protocol) {
+        case 0x06:
+            //getJsonTCP(ipPayload, jsonTransport);
+            break;
+        case 0x11:
+            //getJsonUDP(ipPayload, jsonTransport);
+            break;
+    }
+    json_object_object_add(jsonIP, "transport", jsonTransport);
+    return;
 }
+
+/* TODO below function implementations*/
+void getJsonIPv6(const u_char* ipv6Packet, json_object* jsonIPv6);
+void getJsonARP(const u_char* arpPacket, json_object* jsonARP);
+
+void getJsonTCP(const u_char* tcpPacket, json_object* jsonTCP);
+void getJsonUDP(const u_char* udpPacket, json_object* jsonUDP);
+
 
 //Print to stdout a Json representation of a packet
-void writeJsonPacket(const struct pcap_pkthdr* header, const u_char* packet, //Entire packet header and contents
-                     int count) {                                            //Number to label packet as being
-    json_object *jpacket = json_object_new_object();
-    getJsonPacketLayer(header, packet, count, jpacket);
-    printf("%s\n\n",json_object_to_json_string(jpacket));
+void writeJsonPacket(const struct pcap_pkthdr* pcapHeader, const u_char* pcapPayload, //PCAP header and payload
+                     int count) {                                                     //Number to label packet as being
+    json_object* jsonPacket = json_object_new_object();
+    getJsonPacket(pcapHeader, pcapPayload, count, jsonPacket);
+    printf("%s\n\n",json_object_to_json_string(jsonPacket));
     return;
 }
 
 //Callback function to be used with pcap_loop/ pcap_dispatch to process a single packet.
-void jsonPacketCallback (u_char* extraArgs,                                        //Space to pass additional arguments to callback
-                         const struct pcap_pkthdr* header, const u_char* packet) { //Packets header and contents
+void jsonPacketCallback (u_char* extraArgs,                                                 //Space to pass additional arguments to callback
+                         const struct pcap_pkthdr* pcapHeader, const u_char* pcapPayload) { //Packets header and payload
     //Print numbered Json representation of all packets
     static int count = 1;
-    writeJsonPacket(header, packet, count);
+    writeJsonPacket(pcapHeader, pcapPayload, count);
     count++;
     return;
 }
