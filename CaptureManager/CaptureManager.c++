@@ -50,7 +50,7 @@ string CaptureManager::getCaptures() {
     //Construct the string
     out << "[";
     for(capturesIterator it = captures.begin(); it != captures.end(); it++) {
-        out << "   { \"Id\": " << it->first << ", \"type\":\"static-file\"},";
+        out << "   { \"Id\": " << it->first << ", \"type\":\"UNKNOWN\"},";
     }
     out << "]";
 
