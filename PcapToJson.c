@@ -119,7 +119,7 @@ void getJsonIP(const u_char* ipPacket, //An entire IP packet
 
     //Add the source and destination IP address
     add_to_object_new_string(jsonIP, "ipSrc", inet_ntoa(ipHeader->src));
-    add_to_object_new_string(jsonIP, "ipDst", inet_ntoa(ipHeader->src));
+    add_to_object_new_string(jsonIP, "ipDst", inet_ntoa(ipHeader->dst));
 
     //Add some other data..
     add_to_object_new_int(jsonIP, "total length", ntohs(ipHeader->len));
@@ -202,11 +202,13 @@ void getJsonTCP(const u_char* tcpPacket, json_object* jsonTCP) {
 }
 void getJsonUDP(const u_char* udpPacket, json_object* jsonUDP) {
     const struct udp_hdr* udpHeader = (struct udp_hdr* ) udpPacket;
+    const u_char* udpPayload = (udpPacket + sizeof(struct udp_hdr));
 
     add_to_object_new_string(jsonUDP,"type","UDP");
     add_to_object_new_int(jsonUDP, "srcPort", ntohs(udpHeader->udp_sport));
     add_to_object_new_int(jsonUDP, "dstPort", ntohs(udpHeader->udp_dport));
     add_to_object_new_int(jsonUDP, "length", ntohs(udpHeader->udp_ulen));
+
 }
 
 
