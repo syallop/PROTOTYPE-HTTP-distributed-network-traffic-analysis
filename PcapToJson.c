@@ -163,6 +163,7 @@ void getJsonUDP(const u_char* udpPacket, json_object* jsonUDP) {
     add_to_object_new_string(jsonUDP,"type","UDP");
     add_to_object_new_int(jsonUDP, "srcPort", ntohs(udpHeader->udp_sport));
     add_to_object_new_int(jsonUDP, "dstPort", ntohs(udpHeader->udp_dport));
+    add_to_object_new_int(jsonUDP, "length", ntohs(udpHeader->udp_ulen));
 }
 
 
