@@ -438,7 +438,7 @@ int main(int argc, char *argv[]) {
     pcap_loop(handle, -1, pcapCallbackJson, (u_char*)jsonArray);
 
     //Output created json array to stdout.
-    printf("%s\n\n",json_object_to_json_string(jsonArray));
+    printf("%s",json_object_to_json_string(jsonArray));
 
     pcap_close(handle);
     return 0;
