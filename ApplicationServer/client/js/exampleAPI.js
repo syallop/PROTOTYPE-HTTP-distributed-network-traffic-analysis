@@ -28,7 +28,7 @@ function createCapture(params) {
        url: '/captures/',
        type: 'POST',
        success: function(response) {
-         $('#response').appen(response);
+         $('#response').append(response);
        }
     });
 }
@@ -39,7 +39,7 @@ function endCaptures() {
        url: '/captures/',
        type: 'DELETE',
        success: function(response) {
-         $('#response').appen(response);
+         $('#response').append(response);
        }
     });
 }
@@ -50,7 +50,7 @@ function endCapture(id) {
        url: '/captures/'+id,
        type: 'DELETE',
        success: function(response) {
-         $('#response').appen(response);
+         $('#response').append(response);
        }
     });
 }
