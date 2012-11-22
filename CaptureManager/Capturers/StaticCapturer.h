@@ -18,6 +18,8 @@ class StaticCapturer : public AbstractCapturer {
         ~StaticCapturer();
         void tick(int maxPackets);
         string getParsedPackets();
+
+        bool alive = false;
     private:
         queue<string> jsonQueue;       //Storage for processed packets
 

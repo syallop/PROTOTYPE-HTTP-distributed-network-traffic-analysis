@@ -13,6 +13,7 @@ class AbstractCapturer {
     public:
         virtual void tick(int maxPackets) = 0;     //Ask a capturer to update its internal state
         virtual std::string getParsedPackets() = 0;//Ask a capturer to return parsed packets
+        bool alive;//Whether the capturer considers itself alive
 };
 
 #endif
