@@ -17,20 +17,16 @@ using namespace std;
 using boost::thread;
 
 //Construct a static capturer using default parameters if not supplied
-LiveCapturer::LiveCapturer(string ifilter="",
-                               int optimise=0) {
+LiveCapturer::LiveCapturer(string device="eth0",
+                           string ifilter="",
+                           int optimise=0) {
 
     filter = ifilter.c_str();
 
-    //if (pcap_findalldevs(&alldevs, errbuf) == -1) {
-    //    fprintf(stderr, "%s\n",errbuf);
-    //}
-
-    dev = "wlan0";
-    pcap_lookupnet(dev, &ipaddr, &netmask, errbuf);
+    pcap_lookupnet(device.c_str(), &ipaddr, &netmask, errbuf);
 
     //Open a handle to the capture device
-    handle = pcap_open_live(dev, PCAP_ERRBUF_SIZE, 0, -1, errbuf);
+    handle = pcap_open_live(device.c_str(), PCAP_ERRBUF_SIZE, 0, -1, errbuf);
     if(handle == NULL) {
         fprintf(stderr, "Could not open device for capture: %s\n", errbuf);
     }
