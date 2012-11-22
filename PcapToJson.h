@@ -7,6 +7,7 @@
 #include <time.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <sys/param.h>
 #include <json/json.h>
 
 /* For reference, headers are layered:PCAP:Datalink:Network:Transport:...
@@ -40,6 +41,12 @@ void getJsonTCP(const u_char* tcp, json_object* jsonTCP);
 
 void getJsonUDP(const u_char* udp, json_object* jsonUDP);
 //===================================//
+
+
+//=========Application layer==============================//
+void getJsonDNS(const u_char* dns, json_object* jsonDNS);
+//========================================================//
+
 
 
 
@@ -116,5 +123,57 @@ struct udp_hdr {
     u_short udp_ulen;  //length
     u_short udp_sum;   //checksum
 };
+
+
+/*
+struct dns_hdr {
+  WORD Xid;
+  BYTE RecursionDesired  :1;
+  BYTE Truncation  :1;
+  BYTE Authoritative  :1;
+  BYTE Opcode  :4;
+  BYTE IsResponse  :1;
+  BYTE ResponseCode  :4;
+  BYTE CheckingDisabled   :1;
+  BYTE AuthenticatedData   :1;
+  BYTE Reserved  :1;
+  BYTE RecursionAvailable  :1;
+  WORD QuestionCount;
+  WORD AnswerCount;
+  WORD NameServerCount;
+  WORD AdditionalCount;
+};
+*/
+
+
+struct dns_hdr {
+        unsigned id:16; //Transaction ID
+#if (defined BYTE_ORDER && BYTE_ORDER == BIG_ENDIAN) || (defined __sun && defined _BIG_ENDIAN)
+        unsigned qr:1;    //Query/ Response
+        unsigned opcode:4;//Operation code.
+        unsigned aa:1;    //Authoritative answer flag.
+        unsigned tc:1;    //Truncation flag
+        unsigned rd:1;    //Recursion desired
+        unsigned ra:1;i   //Recursion available
+        unsigned unused:3;//Reserved bits
+        unsigned rcode:4; //Query response code
+#else
+        unsigned rd:1;    //Recursion desired
+        unsigned tc:1;    //Truncation flag
+        unsigned aa:1;    //Authoritative answer
+        unsigned opcode:4;//Operation code
+        unsigned qr:1;    //Query/ Response
+        unsigned rcode:4; //Query response code
+        unsigned unused:3;//Reserved bits
+        unsigned ra:1;    //Recursion available
+#endif
+        unsigned qdcount:16;//Question count
+        unsigned ancount:16;//Answer record count
+        unsigned nscount:16;//Name Server authority record count
+        unsigned arcount:16;//Additional Record count
+};
+
+
+
 
 int compileAndSetFilter(pcap_t* handle, char filter[], int optimise, bpf_u_int32 netmask);

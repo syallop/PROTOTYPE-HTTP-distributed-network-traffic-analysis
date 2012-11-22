@@ -7,6 +7,9 @@ void inline add_to_object_new_string(json_object* root, char name[], char value[
 void inline add_to_object_new_int(json_object* root, char name[], int value) {
     json_object_object_add(root, name, json_object_new_int(value));
 }
+void inline add_to_object_new_boolean(json_object* root, char name[], int value) {
+    json_object_object_add(root, name, json_object_new_boolean(value));
+}
 
 
 //Attempt to apply a bpf format filter to a pcap handle
@@ -209,8 +212,40 @@ void getJsonUDP(const u_char* udpPacket, json_object* jsonUDP) {
     add_to_object_new_int(jsonUDP, "dstPort", ntohs(udpHeader->udp_dport));
     add_to_object_new_int(jsonUDP, "length", ntohs(udpHeader->udp_ulen));
 
+    /*Below case statements will be inefficient/ buggy*/
+    json_object *jsonApplication = json_object_new_object();
+    switch(ntohs(udpHeader->udp_dport)) {
+        case 53:
+            getJsonDNS(udpPayload, jsonApplication);
+            break;
+    }
+    switch(ntohs(udpHeader->udp_sport)) {
+        case 53:
+            getJsonDNS(udpPayload, jsonApplication);
+            break;
+    }
+    json_object_object_add(jsonUDP, "application", jsonApplication);
 }
 
+
+void getJsonDNS(const u_char* dnsPacket, json_object* jsonDNS) {
+    const struct dns_hdr* dnsHeader = (struct dns_hdr* ) dnsPacket;
+
+    add_to_object_new_string(  jsonDNS, "type",        "DNS"                 );
+    add_to_object_new_int(     jsonDNS, "id",          ntohs(dnsHeader->qid) );
+    add_to_object_new_boolean( jsonDNS, "response",    dnsHeader->qr         );
+    add_to_object_new_int(     jsonDNS, "opcode",      dnsHeader->opcode     );
+    add_to_object_new_boolean( jsonDNS, "authorative", dnsHeader->aa         );
+    add_to_object_new_boolean( jsonDNS, "truncated",   dnsHeader->tc         );
+    add_to_object_new_boolean( jsonDNS, "rec-desired", dnsHeader->rd         );
+    add_to_object_new_boolean( jsonDNS, "rec-allowed", dnsHeader->ra         );
+    add_to_object_new_int(     jsonDNS, "rcode",       dnsHeader->rcode      );
+
+    add_to_object_new_int(jsonDNS, "questions", ntohs(dnsHeader->qdcount));
+    add_to_object_new_int(jsonDNS, "answers",   ntohs(dnsHeader->ancount));
+    add_to_object_new_int(jsonDNS, "authrecords", ntohs(dnsHeader->nscount));
+    add_to_object_new_int(jsonDNS, "additional-records", ntohs(dnsHeader->arcount));
+}
 
 //Print to stdout a Json representation of a packet
 void writeJsonPacket(const struct pcap_pkthdr* pcapHeader, const u_char* pcapPayload, //PCAP header and payload
