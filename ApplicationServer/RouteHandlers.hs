@@ -22,59 +22,52 @@ getRootR = do
     liftIO $ writeLog "getRoot handler called"
     defaultLayout [whamlet|<p>Server root.|]
 
---Handler returns a list of all available capturers
+--Returns a list of all available capturers
 getCapturesR :: Handler RepHtml
 getCapturesR = do
     liftIO $ writeLog "getCaptures handler called"
-    defaultLayout [whamlet|^{requestListCaptures}|]
+    rep <- liftIO $ repFromRequest "getcaptures"
+    sendResponse rep
 
---Handler stops all capturers
+--Stops all capturers
 deleteCapturesR :: Handler RepHtml
 deleteCapturesR = do
     liftIO $ writeLog "deleteCaptures handler called"
-    defaultLayout [whamlet|^{requestEndCaptures}|]
+    rep <- liftIO $ repFromRequest "endcaptures"
+    sendResponse rep
 
---Handler starts a new capturer with the given parameters. Returns the new capturers id
+--Starts a new capturer with the given parameters. Returns the new capturers id
 postNewCaptureR :: String -> Handler RepHtml
 postNewCaptureR params = do
     liftIO $ writeLog "postNewCapture handler called"
-    defaultLayout [whamlet|^{requestNewCapture params}|]
+    rep <- liftIO $ repFromRequest $ "newcapture " ++ params
+    sendResponse rep
 
---Handler gets the json packets contained in the specified capturers buffer
-getCaptureR :: Int -> Handler RepHtml
+--Gets the json packets contained in the specified capturers buffer
+getCaptureR :: Int -> Handler RepJson
 getCaptureR id = do
     liftIO $ writeLog "getCapture handler called"
-    defaultLayout [whamlet|^{requestPacketsCapture id}|]
+    rep <- liftIO $ repFromRequest $ "getcapture " ++ show id
+    sendResponse rep
 
---Handler stops the specified capturer
+--Stops the specified capturer
 deleteCaptureR :: Int -> Handler RepHtml
 deleteCaptureR id = do
     liftIO $ writeLog "deleteCapture handler called"
-    defaultLayout [whamlet|^{requestEndCaptures}|]
+    rep <- liftIO $ repFromRequest $ "endcapture " ++ show id
+    sendResponse rep
+
+getSupportedTypesR :: Handler RepHtml
+getSupportedTypesR = do
+    liftIO $ writeLog "getSupportedTypes handler called"
+    rep <- liftIO $ repFromRequest "getcapturertypes"
+    sendResponse rep
 
 
---Make a request to the connection manager and return the response
-widgetFromRequest :: String -> Widget
-widgetFromRequest request = do
-    response <- liftIO $ makeRequest request
-    [whamlet|#{response}|]
 
---Request and return a list of captures
-requestListCaptures :: Widget
-requestListCaptures = widgetFromRequest "getcaptures"
 
---Request and return the contents of a capture
-requestPacketsCapture :: Int -> Widget
-requestPacketsCapture id = widgetFromRequest $ "getcapture " ++ show id
-
---Request creation of a new capture, return capture id
-requestNewCapture :: String -> Widget
-requestNewCapture params = widgetFromRequest $ "newcapture " ++ show params
-
---Request the ending of a specified capture and return the response
-requestEndCapture :: Int -> Widget
-requestEndCapture id = widgetFromRequest $ "endcapture " ++ show id
-
---Request the ending of all captures, return the response
-requestEndCaptures :: Widget
-requestEndCaptures = widgetFromRequest "endcaptures"
+--Make a request, return the response as a RepPlain
+repFromRequest :: String -> IO RepPlain
+repFromRequest request = do
+    response <- makeRequest request
+    return $ RepPlain $ toContent response
