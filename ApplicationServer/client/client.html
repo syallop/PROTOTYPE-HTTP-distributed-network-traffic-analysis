@@ -2,39 +2,104 @@
     <head>
         <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
 
+        <!--Include custom jquery libraries-->
         <script src="./jquery-ui-1.9.1.custom/js/jquery-1.8.2.js"></script>
         <script src="./jquery-ui-1.9.1.custom/js/jquery-ui-1.9.1.custom.min.js"></script>
 
+        <!--Include client js files-->
         <script type="text/javascript" src="./js/parseJsonPcap.js"></script>
         <script type="text/javascript" src="./js/API.js"></script>
         <script type="text/javascript" src="./js/clientFunctions.js"></script>
         <script type="text/javascript" src="./js/myButtons.js"></script>
+        <script type="text/javascript" src="./js/myDialogs.js"></script>
 
+        <!--Include stylesheets-->
         <link rel="stylesheet" href="./jquery-ui-1.9.1.custom/css/smoothness/jquery-ui-1.9.1.custom.min.css" />
         <link rel="stylesheet" href="./css/style.css">
-
     </head>
+
     <body>
+
+        <!--Below: Dialogs used by js-->
+        <div id="newCaptureDialog" title="Create new capture">
+            <form>
+            <fieldset>
+                <label for="params">Manually write parameter string:</label>
+                <input type="text" name="params" id="params" class="text ui-widget-content ui-corner-all" />
+                <br>Format: [(static filename) / (live device)] filter optimise
+                <br>I.e.
+                <br>"static packets.pcap none 0"
+                <br>"live wlan0 none 0"
+            </fieldset>
+            </form>
+        </div>
+
+        <div id="capturesDialog" title="List of running captures">
+            <p></p>
+        </div>
+
+        <div id="changeCaptureDialog" title="Change followed capture">
+            <form>
+            <fieldset>
+                <label for="id">Follow ID:</label>
+                <input type="text" name="id" id="id" class="text ui-widget-content ui-corner-all" />
+                <p>Currently following:0</p>
+            </fieldset>
+            </form>
+        </div>
+
+        <div id="captureNotStoppedDialog" title="Not stopped">
+            <p>Server failed to stop the specified capture.</p>
+        </div>
+
+        <div id="captureStoppedDialog" title="Stopped">
+            <p>Server successfully stopped the capture.</p>
+        </div>
+
+        <div id="pollingBegunDialog" title="Begun">
+            <p>Capture polling has begun</p>
+        </div>
+
+        <div id="pollingPausedDialog" title="Paused">
+            <p>Capture polling has been paused</p>
+        </div>
+
+        <div id="newCaptureCreatedDialog" title="Success">
+            <p>New capture: created</p>
+        </div>
+
+        <div id="newCaptureFailedDialog" title="Failure">
+            <p>Failed to create new capture.</p>
+        </div>
+        <!--End dialogs-->
+
+        <!--Wrap the page content so it can be more easily centered etc-->
         <div id="wrap">
+            
+            <!--Left aligned options bar-->
             <div id="options">
                 <h3>Options</h3>
-                <!--<button id="btEndAll" onclick="endAllCaptures()">End all captures</button>-->
             </div>
 
+            <!--Right aligned content area-->
             <div id="display">
-                <h2>Page title</h2>
+                <h2>PCAP visualisation prototype</h2>
                 <span id="toolbar" class="ui-widget-header ui-corner-all">
-                    <button id="btNew" onclick="newCapture()">new</button>
-                    <button id="btEnd" onclick="endCurrrentCapture()">end</button>
+                    <button id="btNew">new</button>
+                    <button id="btEnd" onclick="endCurrentCapture()">end</button>
                     <button id="btStartStop" onclick="toggleStartStop()">start</button>
                     <button id="btMore" onclick="getMorePackets()">more</button>
+                    <button id="btListCaptures">captures</button>
+                    <button id="btChangeCapture">change</button>
+                    <button id="btEndAll" onclick="endAllCaptures()">End all</button>
                 </span>
 
                 <div id="packets"></div>
 
                 <div id="graph"></div>
 
-            </div>
-        </div>
+            </div><!--Display-->
+        </div><!--End wrap-->
+
     </body>
 </html>

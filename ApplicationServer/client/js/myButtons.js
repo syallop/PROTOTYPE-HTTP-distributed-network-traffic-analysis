@@ -1,9 +1,12 @@
+/*File contains javascript/ Jquery that specifies behavior of buttons*/
+
 $(function() {
     $( "#btNew" ).button({
         icons: {
             primary: "ui-icon-circle-plus"
         }
-    });
+    }).click(function(){$("#newCaptureDialog").dialog("open");});
+
     $( "#btEnd" ).button({
         icons: {
             primary: "ui-icon-closethick"
@@ -46,6 +49,26 @@ $(function() {
             primary: "ui-icon-trash"
         }
     });
+
+    $( "#btListCaptures" ).button({
+        icons: {
+            primary: "ui-icon-script"
+        }
+    }).click(function(){
+                        $("#capturesDialog").dialog("open");
+                        listCaptures();
+                       });
+
+
+    $( "#btChangeCapture" ).button({
+            icons: {
+                primary: "ui-icon-newwin"
+            }
+        }).click(function(){
+      	                    $('#changeCaptureDialog').children("form").children("fieldset").children("p").html("Currently following: "+currentCapId);
+                            $("#changeCaptureDialog").dialog("open");
+                           });
+
 
 });
 

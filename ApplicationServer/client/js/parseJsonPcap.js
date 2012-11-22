@@ -45,8 +45,8 @@ function showJsonDatalink(datalink) {
 
     switch (datalink.type) {
         case    'ethernet': output+=showJsonEthernet(datalink); break;
-        case    'UNKNOWN' : output+=showUnrecognisedByServer;   break;
-        default           : output+=showUnrecognisedByClient;   break;
+        case    'UNKNOWN' : output+=showUnrecognisedByServer();   break;
+        default           : output+=showUnrecognisedByClient();   break;
     }
     return output;
 };
@@ -57,8 +57,8 @@ function showJsonNetwork(network) {
     switch (network.type) {
         case    'IP'     : output+=showJsonIP(network);      break;
         case    'IPv6'   : output+=showJsonIPv6(network);    break;
-        case    'UNKNOWN': output+=showUnrecognisedByServer; break;
-        default:           output+=showUnrecognisedByClient; break;
+        case    'UNKNOWN': output+=showUnrecognisedByServer(); break;
+        default:           output+=showUnrecognisedByClient(); break;
     }
     return output;
 }
@@ -69,8 +69,8 @@ function showJsonTransport(transport) {
     switch (transport.type) {
         case    'TCP'    : output+=showJsonTCP(transport);   break;
         case    'UDP'    : output+=showJsonUDP(transport);   break;
-        case    'UNKNOWN': output+=showUnrecognisedByServer; break;
-        default          : output+=showUnrecognisedByClient; break
+        case    'UNKNOWN': output+=showUnrecognisedByServer(); break;
+        default          : output+=showUnrecognisedByClient(); break
     }
     return output;
 }

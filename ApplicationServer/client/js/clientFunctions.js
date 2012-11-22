@@ -1,23 +1,26 @@
-var currentCapId;   //ID of current capture to request packets from
+/*File contains the core functions called by a client*/
+
+
+var currentCapId = 0;   //ID of current capture to request packets from
 var running = false;//Whether to ask for more packets
 var delay = 10000;  //Miliseconds to wait before asking for more packets
 var loopMorePackets;//looping poll
 
 //Ask the server to create a new capture, store the id returned in currentCapId
-function newCapture() {
+function newCapture(params){
     function newCaptureCallback(response){
         if (response == "0"){
-            alert("Server did not create a new capture.");
+            $("#newCaptureFailedDialog").dialog("open");
         } else {
             currentCapId = response;
-            alert("Server created new capture with ID: "+response);
+	        $('#newCaptureCreatedDialog').children("p").html("New capture with ID: "+currentCapId);
+            $("#newCaptureCreatedDialog").dialog("open");
         }
     }
     //Ask user for parameters, POST to server
-    ajaxNewCapture(newCaptureCallback, "static packets.pcap none 0");
+    ajaxNewCapture(newCaptureCallback, params);
+
 }
-
-
 
 
 
@@ -25,9 +28,9 @@ function newCapture() {
 function endCapture(capId) {
     function endCaptureCallback(response){
         if(response == "success"){
-            alert("Server reported it stopped the capture.");
+	    $("#captureStoppedDialog").dialog("open");
         } else {
-            alert("Server reported it did not end the capture");
+            $("#captureNotStoppedDialog").dialog("open");
         }
     }
     ajaxEndCapture(endCaptureCallback, capId);
@@ -38,7 +41,14 @@ function endCurrentCapture() {
 }
 //Ask the server to end all captures it knows about
 function endAllCaptures() {
-    ajaxEndCaptures(dumpResponse);
+    function endAllCapturesCallback(response){
+        if(response == "success"){
+	        $("#captureStoppedDialog").dialog("open");
+        } else {
+            $("#captureNotStoppedDialog").dialog("open");
+        }
+    }
+    ajaxEndCaptures(endAllCapturesCallback);
 }
 
 
@@ -46,7 +56,10 @@ function endAllCaptures() {
 
 //Ask the server to report all captures it knows about
 function listCaptures(){
-    ajaxGetCaptures(dumpResponse);
+    function listCapturesCallback(response){
+	$('#capturesDialog').children("p").html(response);
+    }
+    ajaxGetCaptures(listCapturesCallback);
 }
 
 
@@ -69,11 +82,11 @@ function toggleStartStop() {
     if(running){
         loopMorePackets = window.clearInterval(loopMorePackets);
         running = false;
-        alert("Stopped polling for new packets.");
+        $("#pollingPausedDialog").dialog("open");
     } else {
         loopMorePackets = setInterval(getMorePackets, delay);
         running = true;
-        alert("Started polling for new packets every "+delay+" miliseconds.");
+        $("#pollingBegunDialog").dialog("open");
     }
 }
 
