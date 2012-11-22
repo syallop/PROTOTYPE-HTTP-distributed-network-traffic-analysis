@@ -51,11 +51,19 @@ void getJsonARP();//TODO
 //==============================================================================//
 
 //Transport layer===============================================================//
-void getJsonTransportLayer(json_object* transportLayer);//TODO
+void getJsonTransportLayer(const struct pcap_pkthdr* header, const u_char* packet,
+                           json_object* transportLayer);//TODO
 void getJsonTCP();//TODO
 void getJsonUDP();//TODO
 //==============================================================================//
 
+
+//Ethernet header
+struct myethernet {
+    u_char  ether_dhost[ETHER_ADDR_LEN];
+    u_char  ether_shost[ETHER_ADDR_LEN];
+    u_short ether_type;
+};
 
 //IP header without options.
 struct myip {
@@ -73,4 +81,27 @@ struct myip {
     u_int8_t    ip_p;            //Protocol
     u_int16_t   ip_sum;          //Checksum
     struct in_addr ip_src,ip_dst;//Source and destination address
+};
+
+//TCP header
+struct mytcp {
+    u_short tcp_sport;
+    u_short tcp_dport;
+    u_int   tcp_seq;
+    u_int   tcp_ack;
+    u_char  tcp_offx2;
+    #define TCP_OFF(tcp)    (((tcp)->tcp_offx2 & 0xf0) >> 4)
+    u_char  tcp_flags;
+    #define TCP_FIN 0x01
+    #define TCP_SYN 0x02
+    #define TCP_RST 0x04
+    #define TCP_PUSH 0x08
+    #define TCP_ACK 0x10
+    #define TCP_URG 0x20
+    #define TCP_ECE 0x40
+    #define TCP_CWR 0x80
+    #define TCP_FLAGS    (TCP_FIN|TCP_SYN|TCP_RST|TCP_ACK|TCP_URG|TCP_ECE|TCP_CWR)
+    u_short tcp_win;
+    u_short tcp_sum;
+    u_short tcp_urp;
 };
