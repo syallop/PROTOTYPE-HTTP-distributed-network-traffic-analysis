@@ -5,19 +5,7 @@
 #include <pcap.h>
 
 #include "packetStructures.h"
-/*
-#include <netinet/if_ether.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
 
-#include <json/json.h>
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/param.h>
-*/
 
 /*Helper functions for adding new objects to a json structure*/
 void inline add_to_object_new_string(json_object* root, char name[], char value[]) {
