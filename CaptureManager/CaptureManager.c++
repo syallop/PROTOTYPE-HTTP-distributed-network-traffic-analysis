@@ -18,6 +18,7 @@ using std::string;
 using std::map;
 using std::stringstream;
 using std::pair;
+using boost::thread;
 
 //Construct the captureManager with default arguments
 CaptureManager::CaptureManager() {
@@ -71,7 +72,8 @@ string CaptureManager::getCapture(int capId) {
 //Create a new capture and return the ID we gave it
 int CaptureManager::newCapture() {
     cout << "LOG: CaptureManager: Adding new capturer" << endl;
-    captures[++lastId] = new StaticCapturer("packets.pcap","",0);
+    //captures[++lastId] = new StaticCapturer("packets.pcap","",0);
+    captures[++lastId] = new LiveCapturer("",0);
     return lastId;
 }
 
