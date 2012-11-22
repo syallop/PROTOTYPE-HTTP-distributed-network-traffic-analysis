@@ -146,7 +146,50 @@ void getJsonIPv6(const u_char* ipv6Packet, json_object* jsonIPv6) {
     add_to_object_new_string(jsonIPv6, "type","IPv6");
 }
 void getJsonARP(const u_char* arpPacket, json_object* jsonARP) {
+    const struct arp_hdr* arpHeader = (struct arp_hdr* ) arpPacket;
+
+    char tmpip[16];
+    char tmpmac[17];
+
     add_to_object_new_string(jsonARP, "type", "ARP");
+    add_to_object_new_int(jsonARP,    "hardware",   ntohs(arpHeader->htype));
+    add_to_object_new_int(jsonARP,    "protocol",   ntohs(arpHeader->ptype));
+    add_to_object_new_string(jsonARP,  "operation", (ntohs(arpHeader->op)== ARP_REQUEST)? "REQ":"REP");
+
+    //Add sender ip and mac
+    sprintf(tmpip, "%d.%d.%d.%d",
+                 arpHeader->spa[0],
+                 arpHeader->spa[1],
+                 arpHeader->spa[2],
+                 arpHeader->spa[3]);
+    add_to_object_new_string(jsonARP, "sender ip", tmpip);
+
+    sprintf(tmpmac, "%02x:%02x:%02x:%02x:%02x:%02x",
+                arpHeader->sha[0],
+                arpHeader->sha[1],
+                arpHeader->sha[2],
+                arpHeader->sha[3],
+                arpHeader->sha[4],
+                arpHeader->sha[5]);
+    add_to_object_new_string(jsonARP, "sender mac", tmpmac);
+
+    //Add target ip and mac
+    sprintf(tmpip, "%d.%d.%d.%d",
+                 arpHeader->tpa[0],
+                 arpHeader->tpa[1],
+                 arpHeader->tpa[2],
+                 arpHeader->tpa[3]);
+    add_to_object_new_string(jsonARP, "target ip", tmpip);
+
+    sprintf(tmpmac, "%02x:%02x:%02x:%02x:%02x:%02x",
+                arpHeader->tha[0],
+                arpHeader->tha[1],
+                arpHeader->tha[2],
+                arpHeader->tha[3],
+                arpHeader->tha[4],
+                arpHeader->tha[5]);
+    add_to_object_new_string(jsonARP, "target mac", tmpmac);
+
 }
 
 void getJsonTCP(const u_char* tcpPacket, json_object* jsonTCP) {
