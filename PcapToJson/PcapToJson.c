@@ -375,7 +375,8 @@ void writeJsonPacket(const struct pcap_pkthdr* pcapHeader, const u_char* pcapPay
 }
 
 //Callback function to be used with pcap_loop/ pcap_dispatch to process a single packet.
-void jsonPacketCallback (u_char* extraArgs,                                                 //Space to pass additional arguments to callback
+//Prints packet to stdout
+void pcapCallbackPrint (u_char* extraArgs,                                                  //Space to pass additional arguments to callback
                          const struct pcap_pkthdr* pcapHeader, const u_char* pcapPayload) { //Packets header and payload
     //Print numbered Json representation of all packets
     static int count = 1;
@@ -384,6 +385,20 @@ void jsonPacketCallback (u_char* extraArgs,                                     
     return;
 }
 
+//Callback function to be used with pcap_loop/ pcap_dispatch to process a single packet.
+//Adds the processed json packet to the jsonArray given as the first argument
+void pcapCallbackJson (u_char* jsonArray,
+                        const struct pcap_pkthdr* pcapHeader, const u_char* pcapPayload) {
+    static int count = 1;
+    json_object* jsonPacket = json_object_new_object();
+    getJsonPacket(pcapHeader, pcapPayload, count, jsonPacket);
+    //add jsonPacket to jsonArray given as first arg
+    json_object_array_add((json_object*)jsonArray, jsonPacket);
+    count++;
+    return;
+}
+
+
 int main(int argc, char *argv[]) {
     pcap_t* handle;                    //Handle to a PCAP source
     char errbuf[PCAP_ERRBUF_SIZE];     //Buffer for PCAP errors
@@ -391,6 +406,7 @@ int main(int argc, char *argv[]) {
     int optimise = 1;                  //Whether to optimise the filter
     bpf_u_int32 netmask = 0xFFFFFF00;
     char *inputfile = "";              //PCAP file name
+    json_object* jsonArray;            //Output array of json packets
 
     //Parse command line options
     int c;
@@ -407,7 +423,6 @@ int main(int argc, char *argv[]) {
         }
     }
 
-
     //Open a handle to a pcap format file
     handle = pcap_open_offline(inputfile, errbuf);
     if(handle == NULL) {
@@ -418,8 +433,12 @@ int main(int argc, char *argv[]) {
     //Attempt to apply the filter
     if (compileAndSetFilter(handle, filter, optimise, netmask) != 0){return 1;}
 
-    //Loop a callback function over each packet
-    pcap_loop(handle, -1, jsonPacketCallback, NULL);
+    //Process each packet with pcapCallbackJson. Stores result in jsonArray
+    jsonArray = json_object_new_array();
+    pcap_loop(handle, -1, pcapCallbackJson, (u_char*)jsonArray);
+
+    //Output created json array to stdout.
+    printf("%s\n\n",json_object_to_json_string(jsonArray));
 
     pcap_close(handle);
     return 0;
