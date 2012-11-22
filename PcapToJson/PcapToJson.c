@@ -387,10 +387,26 @@ void jsonPacketCallback (u_char* extraArgs,                                     
 int main(int argc, char *argv[]) {
     pcap_t* handle;                    //Handle to a PCAP source
     char errbuf[PCAP_ERRBUF_SIZE];     //Buffer for PCAP errors
-    char filter[] = "";                //Filter to apply to PCAP source
+    char *filter = "";                 //Filter to apply to PCAP source
     int optimise = 1;                  //Whether to optimise the filter
     bpf_u_int32 netmask = 0xFFFFFF00;
-    char inputfile[] = "capture.pcap";
+    char *inputfile = "";              //PCAP file name
+
+    //Parse command line options
+    int c;
+    while((c = getopt(argc,argv,"i:f:"))!= -1) {
+        switch(c) {
+            case 'i':
+                inputfile = optarg;
+                break;
+            case 'f':
+                filter = optarg;
+                break;
+            default:
+                abort();
+        }
+    }
+
 
     //Open a handle to a pcap format file
     handle = pcap_open_offline(inputfile, errbuf);

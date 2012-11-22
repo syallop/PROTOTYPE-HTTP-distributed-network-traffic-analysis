@@ -2,6 +2,7 @@
 #include <pcap.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <netinet/if_ether.h>
 #include <netinet/in.h>
 #include <time.h>
