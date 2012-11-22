@@ -25,6 +25,7 @@ LiveCapturer::LiveCapturer(string ifilter="",
     //if (pcap_findalldevs(&alldevs, errbuf) == -1) {
     //    fprintf(stderr, "%s\n",errbuf);
     //}
+
     dev = "wlan0";
     pcap_lookupnet(dev, &ipaddr, &netmask, errbuf);
 
@@ -64,7 +65,7 @@ void LiveCapturer::tickThread(int maxPackets) {
     //(Incorrectly) add the json into the queue
     //TODO generate valid json. Can currently produce [p1,p2][p3,p4]
     jsonQueue.push(json_object_to_json_string(jsonArray));
-    cout << "LOG: static capturer ticked" << endl;
+    cout << "LOG: live capturer ticked" << endl;
 }
 
 //Parses a given PCAP packet to a json representation and stores it in the jsonArray

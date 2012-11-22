@@ -27,6 +27,7 @@ class LiveCapturer : public AbstractCapturer {
         pcap_t* handle;                //Pointer to a pcap format file
         struct bpf_program program;    //Compiled filter program
         bpf_u_int32 ipaddr;            //IP address assigned to the interface we're listening on
+        pcap_if_t *alldevs;
         char* dev;                     //Device we're listening on. I.e. 'wlan0','eth0'
         char errbuf[PCAP_ERRBUF_SIZE]; //Buffer for PCAP errors
         bpf_u_int32 netmask = 0xFFFFFF00;

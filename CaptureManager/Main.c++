@@ -10,8 +10,20 @@ using namespace std;
 using boost::thread;
 
 //Program entry point
-int main() {
-    Program* p = new Program(9999,10);
+int main(int argc, char *argv[]) {
+    int port = 9999;
+
+    //Parse port to run captureManager on
+    int c;
+    while((c = getopt(argc,argv,"p:"))!= -1) {
+        switch(c) {
+            case 'p':
+                port = atoi(optarg);
+                break;
+        }
+    }
+
+    Program* p = new Program(port,10);
     p->run();
     return 0;
 }
@@ -113,25 +125,48 @@ void Program::handleConnection(int lsockfd) {
 //Given a command string, return an appropriate response, most likely from querying the capture manager
 //Warning: horrible code.
 string Program::commandParser(char command[64]) {
-    if       (matches(command, "getcaptures")){
+    char *c;
+    char *p;
+
+    //Split command string into command and optional parameter
+    c = strtok(command, " ");
+    if(c){
+        p = strtok(NULL, " ");
+    }
+
+    if (matches(c, "getcaptures")){
         cout << "LOG: parsed as request for a list of captures" << endl;
         return manager->getCaptures();
     }else if (matches(command, "getcapture")){
         cout << "LOG: parsed as a request for the contents of a capture" << endl;
-        return manager->getCapture(1);
+        if(p){
+            return manager->getCapture(atoi(p));
+        } else{
+            return "Provide an ID to retrieve.";
+        }
     }else if (matches(command, "newcapture")){
         cout << "LOG: parsed as request for a new capture to be created" << endl;
-        char tmp[10];
-        sprintf(tmp, "%d", manager->newCapture());
-        return tmp;
+        if(p){
+            string type = p;
+
+            char tmp[10];
+            sprintf(tmp, "%d", manager->newCapture(type));
+            return tmp;
+        } else {
+            return "Provide a caoture type";
+        }
     }else if (matches(command, "endcaptures")){
         cout << "LOG: parsed as a request to end all captures" << endl;
         manager->endCaptures();
         return "success";
     }else if (matches(command, "endcapture")){
         cout << "LOG: parsed as a request to end a given capture" << endl;
-        manager->endCapture(1);
-        return "success";
+        if(p){
+            manager->endCapture(atoi(p));
+            return "success";
+        } else{
+            return "Provide an ID to end.";
+        }
     }else if(matches(command, "exit")){
         cout << "LOG: parsed as a request to end comunication" << endl;
         return "Bye";
